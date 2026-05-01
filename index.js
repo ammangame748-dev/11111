@@ -280,7 +280,26 @@ client.on('interactionCreate', async (interaction) => {
             );
             await ch.send({ embeds: [eb], components: [r1, r2] });
         }
+if (interaction.customId === 'role_menu_select') {
 
+    const roleId = interaction.values[0];
+    const member = interaction.member;
+
+    // نشيل كل الرتب السابقة من المنيو
+    for (const r of roleMenuRoles) {
+        if (member.roles.cache.has(r)) {
+            await member.roles.remove(r);
+        }
+    }
+
+    // نعطي الرتبة الجديدة
+    await member.roles.add(roleId);
+
+    await interaction.reply({
+        content: '✅ تم تحديث رتبتك بنجاح',
+        ephemeral: true
+    });
+}
         if (interaction.customId === 'rename_select') {
             const modal = new ModalBuilder().setCustomId('actual_name_change').setTitle('تغيير الاسم');
             modal.addComponents(new ActionRowBuilder().addComponents(
