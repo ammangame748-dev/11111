@@ -17,6 +17,17 @@ const client = new Client({
 let autoLineBanner = null;
 let lastTicketImage = null, lastTicketEmoji = null;
 let lastRenameImage = null, lastRenameEmoji = null;
+const express = require('express');
+const app = express();
+
+app.get('/', (req, res) => {
+  res.send('البوت شغال 24/7 ✅');
+});
+
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Web Server is running on port ${port}`);
+});
 
 client.on('ready', async () => {
     console.log(`✅ ${client.user.tag} متصل وجاهز!`);
@@ -284,8 +295,3 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 client.login(process.env.TOKEN);
-const http = require('http');
-http.createServer((req, res) => {
-  res.write("I'm alive");
-  res.end();
-}).listen(8080);
