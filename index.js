@@ -186,7 +186,43 @@ client.on('interactionCreate', async (interaction) => {
             autoLineBanner = interaction.options.getAttachment('image').url;
             await interaction.reply({ content: "✅ تم حفظ البنر بنجاح!", ephemeral: true });
         }
+if (interaction.commandName === 'role-menu') {
 
+    roleMenuRoles = [
+        interaction.options.getRole('role1').id,
+        interaction.options.getRole('role2').id,
+        interaction.options.getRole('role3').id,
+        interaction.options.getRole('role4').id,
+        interaction.options.getRole('role5').id,
+        interaction.options.getRole('role6').id,
+        interaction.options.getRole('role7').id,
+        interaction.options.getRole('role8').id,
+    ];
+
+    const title = interaction.options.getString('title') || 'Role Menu';
+
+    const menu = new StringSelectMenuBuilder()
+        .setCustomId('role_menu_select')
+        .setPlaceholder('اختر رتبتك')
+        .addOptions(
+            roleMenuRoles.map((r, i) => ({
+                label: `Role ${i + 1}`,
+                value: r
+            }))
+        );
+
+    const row = new ActionRowBuilder().addComponents(menu);
+
+    const embed = new EmbedBuilder()
+        .setTitle(title)
+        .setDescription('اختر الرتبة من القائمة')
+        .setColor('Blue');
+
+    await interaction.reply({
+        embeds: [embed],
+        components: [row]
+    });
+}
         if (interaction.commandName === 'setup-ticket') {
             lastTicketImage = interaction.options.getAttachment('image').url;
             lastTicketEmoji = interaction.options.getString('emoji_id');
