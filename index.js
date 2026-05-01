@@ -15,6 +15,8 @@ const client = new Client({
 
 // مخازن مؤقتة للبيانات
 let autoLineBanner = null;
+let roleMenuRoles = [];
+let roleMenuMessage = null;
 let lastTicketImage = null, lastTicketEmoji = null;
 let lastRenameImage = null, lastRenameEmoji = null;
 const express = require('express');
@@ -31,47 +33,57 @@ app.listen(port, () => {
 
 client.on('ready', async () => {
     console.log(`✅ ${client.user.tag} متصل وجاهز!`);
-    
+
     const commands = [
-        { 
-            name: 'set-line', 
-            description: 'تحديد بنر الخط التلقائي (ارفع صورة)', 
-            options: [{ name: 'image', description: 'ارفع صورة الخط', type: 11, required: true }] 
-        },
-        { 
-            name: 'setup-ticket', 
-            description: 'إعداد بانل التذاكر (منيو)', 
+
+        {
+            name: 'set-line',
+            description: 'تحديد بنر الخط التلقائي (ارفع صورة)',
             options: [
-                { name: 'image', description: 'ارفع صورة للبانل', type: 11, required: true }, 
+                { name: 'image', description: 'ارفع صورة الخط', type: 11, required: true }
+            ]
+        },
+
+        {
+            name: 'setup-ticket',
+            description: 'إعداد بانل التذاكر (منيو)',
+            options: [
+                { name: 'image', description: 'ارفع صورة للبانل', type: 11, required: true },
                 { name: 'emoji_id', description: 'ضع ID الإيموجي للمنيو', type: 3, required: true }
-            ] 
+            ]
         },
-        { 
-            name: 'setup-rename', 
-            description: 'إعداد قائمة تغيير الأسماء (منيو)', 
+
+        {
+            name: 'setup-rename',
+            description: 'إعداد قائمة تغيير الأسماء (منيو)',
             options: [
-                { name: 'image', description: 'ارفع صورة للإيمباد', type: 11, required: true }, 
+                { name: 'image', description: 'ارفع صورة للإيمباد', type: 11, required: true },
                 { name: 'emoji', description: 'ضع الإيموجي للمنيو', type: 3, required: true }
-            ] 
+            ]
         },
-        { 
-            name: 'ban', 
-            description: 'طرد نهائي (باند)', 
+
+        {
+            name: 'ban',
+            description: 'طرد نهائي (باند)',
             options: [
-                { name: 'user', description: 'العضو المراد حظره', type: 6, required: true }, 
+                { name: 'user', description: 'العضو المراد حظره', type: 6, required: true },
                 { name: 'reason', description: 'سبب الحظر', type: 3, required: false }
-            ] 
+            ]
         },
-        { 
-            name: 'timeout', 
-            description: 'تايم آوت', 
+
+        {
+            name: 'timeout',
+            description: 'تايم آوت',
             options: [
-                { name: 'user', description: 'العضو المراد إعطاؤه وقت', type: 6, required: true }, 
+                { name: 'user', description: 'العضو المراد إعطاؤه وقت', type: 6, required: true },
                 { name: 'duration', description: 'المدة بالدقائق', type: 4, required: true }
-            ] 
+            ]
         }
+
     ];
+
     await client.application.commands.set(commands);
+
 });
 
 // منع الكراش
