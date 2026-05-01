@@ -202,14 +202,14 @@ if (interaction.commandName === 'role-menu') {
     const title = interaction.options.getString('title') || 'Role Menu';
 
     const menu = new StringSelectMenuBuilder()
-        .setCustomId('role_menu_select')
-        .setPlaceholder('اختر رتبتك')
-        .addOptions(
-            roleMenuRoles.map((r, i) => ({
-                label: `Role ${i + 1}`,
-                value: r
-            }))
-        );
+    .setCustomId('role_menu_select')
+    .setPlaceholder('اختر رتبتك')
+    .addOptions(
+        roleMenuRoles.map(role => ({
+            label: role.name,   // 👈 اسم الرتبة الحقيقي
+            value: role.id
+        }))
+    );
 
     const row = new ActionRowBuilder().addComponents(menu);
 
