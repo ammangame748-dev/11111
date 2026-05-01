@@ -189,15 +189,15 @@ client.on('interactionCreate', async (interaction) => {
 if (interaction.commandName === 'role-menu') {
 
     roleMenuRoles = [
-        interaction.options.getRole('role1').id,
-        interaction.options.getRole('role2').id,
-        interaction.options.getRole('role3').id,
-        interaction.options.getRole('role4').id,
-        interaction.options.getRole('role5').id,
-        interaction.options.getRole('role6').id,
-        interaction.options.getRole('role7').id,
-        interaction.options.getRole('role8').id,
-    ];
+    interaction.options.getRole('role1'),
+    interaction.options.getRole('role2'),
+    interaction.options.getRole('role3'),
+    interaction.options.getRole('role4'),
+    interaction.options.getRole('role5'),
+    interaction.options.getRole('role6'),
+    interaction.options.getRole('role7'),
+    interaction.options.getRole('role8'),
+];
 
     const title = interaction.options.getString('title') || 'Role Menu';
 
