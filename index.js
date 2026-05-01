@@ -335,14 +335,19 @@ if (interaction.customId === 'role_menu_select') {
     const member = interaction.member;
     const newRoleId = interaction.values[0];
 
-    // إزالة كل الرتب الموجودة من المنيو فقط
-    for (const role of roleMenuRoles) {
-        if (member.roles.cache.has(role.id)) {
-            await member.roles.remove(role.id);
-        }
+    // نحول كل الرتب إلى IDs بشكل مضمون
+    const roleIds = roleMenuRoles.map(r => r.id);
+
+    // نشيل أي رتبة موجودة من رتب المنيو
+    const rolesToRemove = member.roles.cache.filter(role =>
+        roleIds.includes(role.id)
+    );
+
+    if (rolesToRemove.size > 0) {
+        await member.roles.remove(rolesToRemove);
     }
 
-    // إضافة الرتبة الجديدة
+    // نضيف الرتبة الجديدة
     await member.roles.add(newRoleId);
 
     await interaction.reply({
