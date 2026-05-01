@@ -43,7 +43,21 @@ client.on('ready', async () => {
                 { name: 'image', description: 'ارفع صورة الخط', type: 11, required: true }
             ]
         },
-
+{
+    name: 'role-menu',
+    description: 'إنشاء منيو رتب (8 رتب)',
+    options: [
+        { name: 'role1', type: 8, description: 'الرتبة الأولى', required: true },
+        { name: 'role2', type: 8, description: 'الرتبة الثانية', required: true },
+        { name: 'role3', type: 8, description: 'الرتبة الثالثة', required: true },
+        { name: 'role4', type: 8, description: 'الرتبة الرابعة', required: true },
+        { name: 'role5', type: 8, description: 'الرتبة الخامسة', required: true },
+        { name: 'role6', type: 8, description: 'الرتبة السادسة', required: true },
+        { name: 'role7', type: 8, description: 'الرتبة السابعة', required: true },
+        { name: 'role8', type: 8, description: 'الرتبة الثامنة', required: true },
+        { name: 'title', type: 3, description: 'عنوان الإيمباد', required: false }
+    ]
+},
         {
             name: 'setup-ticket',
             description: 'إعداد بانل التذاكر (منيو)',
