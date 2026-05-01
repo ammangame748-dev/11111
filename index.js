@@ -332,21 +332,21 @@ if (interaction.commandName === 'role-menu') {
         }
 if (interaction.customId === 'role_menu_select') {
 
-    const roleId = interaction.values[0];
     const member = interaction.member;
+    const newRoleId = interaction.values[0];
 
-    // نشيل كل الرتب السابقة من المنيو
-    for (const r of roleMenuRoles) {
-        if (member.roles.cache.has(r)) {
-            await member.roles.remove(r);
+    // إزالة كل الرتب الموجودة من المنيو فقط
+    for (const role of roleMenuRoles) {
+        if (member.roles.cache.has(role.id)) {
+            await member.roles.remove(role.id);
         }
     }
 
-    // نعطي الرتبة الجديدة
-    await member.roles.add(roleId);
+    // إضافة الرتبة الجديدة
+    await member.roles.add(newRoleId);
 
     await interaction.reply({
-        content: '✅ تم تحديث رتبتك بنجاح',
+        content: 'تم تحديث رتبتك بنجاح',
         ephemeral: true
     });
 }
