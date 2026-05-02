@@ -565,22 +565,26 @@ if (interaction.customId === 'role_menu_select') {
             await interaction.showModal(modal);
         }
     }
-        // ================= SELECT MENUS (المنيو) =================
-        if (interaction.isStringSelectMenu()) {
-
+            if (interaction.isStringSelectMenu()) {
             if (interaction.customId === 'buy_role_menu') {
+                // 1. الرد فوراً بـ "تفكير" عشان ما يعطي Unknown Interaction
+                await interaction.deferReply({ ephemeral: true });
+
                 const itemIndex = parseInt(interaction.values[0]);
                 const selectedItem = shopConfig.items[itemIndex];
 
-                if (!selectedItem) {
-                    return interaction.reply({ content: "❌ لم يتم العثور على الرتبة.", ephemeral: true });
+                // 2. التحقق إذا الرتبة موجودة في الإعدادات
+                if (!selectedItem || !selectedItem.role) {
+                    return interaction.editReply({ content: "❌ فشل جلب بيانات الرتبة، يرجى إعادة إعداد المتجر بـ /shop-setup" });
                 }
 
-                // 1. حفظ الطلب في الذاكرة
-                pendingPurchases.set(interaction.user.id, {
-                    roleId: selectedItem.role.id,
-                    price: selectedItem.price
-                });
+                // 3. حفظ الطلب في الذاكرة (تأكد أن pendingPurchases معرفة فوق)
+                if (typeof pendingPurchases !== 'undefined') {
+                    pendingPurchases.set(interaction.user.id, {
+                        roleId: selectedItem.role.id,
+                        price: selectedItem.price
+                    });
+                }
 
                 const receiverId = shopConfig.receiver; 
                 const taxPrice = Math.floor(selectedItem.price * (20 / 19) + 1);
@@ -591,17 +595,18 @@ if (interaction.customId === 'role_menu_select') {
                     .setColor("Blue")
                     .setFooter({ text: "سيتم إعطاؤك الرتبة تلقائياً فور التحويل" });
 
-                await interaction.reply({ embeds: [buyEmbed], ephemeral: true });
+                // 4. استخدام editReply بدل reply لأننا عملنا defer
+                await interaction.editReply({ embeds: [buyEmbed] });
 
-                // 2. إرسال إشعار لروم التحويل
                 const transferChannel = interaction.guild.channels.cache.get(shopConfig.transferChannel);
                 if (transferChannel) {
                     transferChannel.send({ 
-                        content: `🔔 طلب جديد: <@${interaction.user.id}> اختار رتبة **${selectedItem.role.name}** وسعرها \`${selectedItem.price}\`. ننتظر التحويل...` 
-                    }).catch(e => console.log("خطأ في إرسال إشعار التحويل"));
+                        content: `🔔 طلب جديد: <@${interaction.user.id}> اختار رتبة **${selectedItem.role.name}**. ننتظر التحويل...` 
+                    }).catch(() => {});
                 }
             }
-        } // نهاية قوس المنيو - تمام التمام ✅
+        }
+
 
 
     // ================= BUTTONS (الأزرار) =================
