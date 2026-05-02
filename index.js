@@ -472,37 +472,33 @@ client.on('interactionCreate', async (interaction) => {
             await ch.send({ embeds: [eb], components: [r1, r2] });
         }
 
-        if (interaction.customId === 'role_menu_select') {
-            const member = interaction.member;
-            const newRoleId = interaction.values[0]; // الرتبة الجديدة اللي اختارها
+if (interaction.customId === 'role_menu_select') {
+    const member = interaction.member;
+    const selectedRoleId = interaction.values[0];
 
-            // 1. استخراج الـ ID لكل الرتب الموجودة في المنيو (الفلتر)
-            const menuRoleIds = roleMenuRoles.map(r => r.id);
+    try {
+        // كل رتب المنيو
+        const menuRoleIds = roleMenuRoles.map(r => r.id);
 
-            // 2. فحص رتب العضو: أي رتبة عنده موجودة ضمن قائمة المنيو يتم تحديدها للحذف
-            const rolesToRemove = member.roles.cache.filter(role => menuRoleIds.includes(role.id));
+        // حذف كل رتب المنيو من العضو
+        await member.roles.remove(menuRoleIds);
 
-            try {
-                // 3. حذف الرتب القديمة (إذا وُجدت)
-                if (rolesToRemove.size > 0) {
-                    await member.roles.remove(rolesToRemove);
-                }
+        // إضافة الرتبة المختارة فقط
+        await member.roles.add(selectedRoleId);
 
-                // 4. إضافة الرتبة الجديدة
-                await member.roles.add(newRoleId);
+        await interaction.reply({
+            content: "✅ تم تحديث رتبتك بنجاح (تم حذف الرتب السابقة وإضافة الجديدة)",
+            ephemeral: true
+        });
 
-                await interaction.reply({ 
-                    content: `✅ تم تحديث رتبتك بنجاح! (تم إزالة الرتب السابقة من المنيو)`, 
-                    ephemeral: true 
-                });
-            } catch (error) {
-                console.error(error);
-                await interaction.reply({ 
-                    content: "❌ فشل تحديث الرتب، تأكد أن رتبة البوت أعلى من الرتب المطلوبة.", 
-                    ephemeral: true 
-                });
-            }
-        }
+    } catch (error) {
+        console.error(error);
+        await interaction.reply({
+            content: "❌ صار خطأ، تأكد أن رتبة البوت أعلى من الرتب.",
+            ephemeral: true
+        });
+    }
+}
 
 
         if (interaction.customId === 'rename_select') {
