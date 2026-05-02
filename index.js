@@ -521,6 +521,35 @@ client.on('interactionCreate', async (interaction) => {
             await interaction.showModal(modal);
         }
     }
+        if (interaction.customId === 'buy_role_menu') {
+            const itemIndex = parseInt(interaction.values[0]);
+            const selectedItem = shopConfig.items[itemIndex];
+
+            if (!selectedItem) {
+                return interaction.reply({ content: "❌ لم يتم العثور على الرتبة، يرجى إعادة المحاولة.", ephemeral: true });
+            }
+
+            const price = selectedItem.price;
+            const receiverId = shopConfig.receiver;
+            // حساب السعر مع ضريبة ProBot (الضرب في 20 والقسمة على 19)
+            const taxPrice = Math.floor(price * (20 / 19) + 1);
+
+            const buyEmbed = new EmbedBuilder()
+                .setTitle("💳 طلب شراء رتبة")
+                .setDescription(`لقد اخترت شراء رتبة: ${selectedItem.role}\n\n**السعر المطلوبة:** \`${price}\`\n**الأمر للنسخ:**\n\`c ${receiverId} ${taxPrice}\``)
+                .setColor("Blue")
+                .setFooter({ text: "قم بالتحويل في روم الطلبات لإتمام العملية" });
+
+            await interaction.reply({ embeds: [buyEmbed], ephemeral: true });
+
+            // إرسال رسالة في روم التحويل عشان الإدارة تنتبه
+            const transferChannel = interaction.guild.channels.cache.get(shopConfig.transferChannel);
+            if (transferChannel) {
+                transferChannel.send({ 
+                    content: `🔔 طلب جديد: <@${interaction.user.id}> يريد شراء ${selectedItem.role} بسعر \`${price}\`.` 
+                });
+            }
+        }
 
     // ================= BUTTONS =================
     if (interaction.isButton()) {
