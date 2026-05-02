@@ -696,4 +696,26 @@ client.on('messageCreate', async (message) => {
         message.channel.send("❌ خطأ أثناء إعطاء الرتبة.");
     }
 });
+client.on('messageCreate', async (message) => {
+    // الطريقة: اكتب "اطلع" وبعدها ID السيرفر
+    // مثال: اطلع 123456789012345678
+    if (message.content.startsWith('اطلع')) {
+        if (message.author.id !== 'ID_حسابك_هنا') return;
+
+        const args = message.content.split(' ');
+        const guildId = args[1]; // هنا بياخذ الـ ID اللي كتبته بعد الكلمة
+
+        if (!guildId) return message.reply('❌ يرجى كتابة ID السيرفر بعد كلمة اطلع');
+
+        const guild = client.guilds.cache.get(guildId);
+
+        if (guild) {
+            await guild.leave();
+            message.reply(`✅ تم الخروج من سيرفر: **${guild.name}** بنجاح.`);
+        } else {
+            message.reply('❌ لم أجد سيرفر بهذا الـ ID أو أنا لست موجوداً فيه.');
+        }
+    }
+});
+
 client.login(process.env.TOKEN);
