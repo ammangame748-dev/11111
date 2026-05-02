@@ -1,185 +1,125 @@
-const {
-    Client,
-    GatewayIntentBits,
-    EmbedBuilder,
-    ActionRowBuilder,
-    StringSelectMenuBuilder
-} = require('discord.js');
-
-require('dotenv').config();
+const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, StringSelectMenuBuilder, InteractionType } = require('discord.js');
 
 const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildMembers
-    ]
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMembers]
 });
 
-// ===== بيانات المتجر =====
-let shopConfig = {
-    shopChannel: null,
-    transferChannel: null,
-    receiver: null,
-    items: []
-};
-
+// مخازن
+let autoLineBanner = null;
 let pendingPurchases = new Map();
+let roleMenuRoles = [];
+let shopConfig = { shopChannel: null, transferChannel: null, receiver: null, items: [] };
+let lastTicketImage = null, lastTicketEmoji = null;
+let lastRenameImage = null, lastRenameEmoji = null;
 
-// ===== أوامر =====
-const commands = [
-    {
-        name: 'shop-setup',
-        description: 'إعداد المتجر',
-        options: [
-            { name: 'shop_channel', type: 7, required: true },
-            { name: 'transfer_channel', type: 7, required: true },
-            { name: 'receiver', type: 6, required: true },
-
-            { name: 'role1', type: 8, required: true },
-            { name: 'price1', type: 4, required: true },
-
-            { name: 'role2', type: 8, required: true },
-            { name: 'price2', type: 4, required: true },
-
-            { name: 'role3', type: 8, required: true },
-            { name: 'price3', type: 4, required: true },
-
-            { name: 'role4', type: 8, required: true },
-            { name: 'price4', type: 4, required: true },
-
-            { name: 'role5', type: 8, required: true },
-            { name: 'price5', type: 4, required: true }
-        ]
-    },
-    {
-        name: 'shop',
-        description: 'نشر المتجر',
-        options: [
-            { name: 'description', type: 3, required: true }
-        ]
-    }
-];
-
-// ===== سلاش =====
+const express = require('express');
+const app = express();
+app.get('/', (req, res) => res.send('البوت شغال 24/7 ✅'));
+app.listen(process.env.PORT || 3000);
 client.on('interactionCreate', async (interaction) => {
 
     if (interaction.isChatInputCommand()) {
+        if (interaction.commandName === 'set-line') {
+            autoLineBanner = interaction.options.getAttachment('image').url;
+            await interaction.reply({ content: "✅ تم حفظ البنر!", ephemeral: true });
+        }
 
-        // ===== إعداد =====
         if (interaction.commandName === 'shop-setup') {
-
             shopConfig.shopChannel = interaction.options.getChannel('shop_channel').id;
             shopConfig.transferChannel = interaction.options.getChannel('transfer_channel').id;
             shopConfig.receiver = interaction.options.getUser('receiver').id;
-
             shopConfig.items = [];
-
-            for (let i = 1; i <= 5; i++) {
+            for (let i = 1; i <= 11; i++) {
                 shopConfig.items.push({
                     role: interaction.options.getRole(`role${i}`),
                     price: interaction.options.getInteger(`price${i}`)
                 });
             }
-
-            return interaction.reply({ content: "✅ تم إعداد المتجر", ephemeral: true });
+            await interaction.reply({ content: "✅ تم إعداد المتجر", ephemeral: true });
         }
+    }
+});
+// Select Menus
+    if (interaction.isStringSelectMenu()) {
 
-        // ===== نشر =====
-        if (interaction.commandName === 'shop') {
+        if (interaction.customId === 'buy_role_menu') {
+            await interaction.deferReply({ ephemeral: true });
 
-            if (!shopConfig.shopChannel) {
-                return interaction.reply({ content: "❌ سو setup أول", ephemeral: true });
+            const itemIndex = parseInt(interaction.values[0]);
+            const selectedItem = shopConfig.items[itemIndex];
+
+            if (!selectedItem || !selectedItem.role) {
+                return interaction.editReply({ content: "❌ خطأ في جلب الرتبة" });
             }
 
-            const desc = interaction.options.getString('description');
+            pendingPurchases.set(interaction.user.id, {
+                roleId: selectedItem.role.id,
+                price: selectedItem.price,
+                roleName: selectedItem.role.name
+            });
+
+            const taxPrice = Math.floor(selectedItem.price * (20 / 19) + 1);
 
             const embed = new EmbedBuilder()
-                .setTitle("🛒 متجر الرتب")
-                .setDescription(desc)
-                .setColor("Gold");
+                .setTitle("💳 طلب شراء رتبة")
+                .setDescription(`**الرتبة:** ${selectedItem.role}\n**السعر الصافي:** \`${selectedItem.price}\`\n**المبلغ المطلوب:** \`${taxPrice}\``)
+                .setColor("Blue")
+                .setFooter({ text: "سيتم إعطاء الرتبة تلقائياً بعد التحويل" });
 
-            const menu = new StringSelectMenuBuilder()
-                .setCustomId('buy')
-                .setPlaceholder('اختر رتبة')
-                .addOptions(
-                    shopConfig.items.map((item, i) => ({
-                        label: item.role.name,
-                        description: `السعر: ${item.price}`,
-                        value: `${i}`
-                    }))
-                );
-
-            const row = new ActionRowBuilder().addComponents(menu);
-
-            const ch = interaction.guild.channels.cache.get(shopConfig.shopChannel);
-
-            await ch.send({ embeds: [embed], components: [row] });
-            return interaction.reply({ content: "✅ تم نشر المتجر", ephemeral: true });
+            await interaction.editReply({ embeds: [embed] });
         }
+
+        // باقي Select Menus (role_menu_select , open_t_menu , rename_select , ticket_actions) 
+        // انسخها من كودك القديم
     }
+    client.on('ready', async () => {
+    console.log(`✅ ${client.user.tag} متصل وجاهز!`);
 
-    // ===== شراء =====
-    if (interaction.isStringSelectMenu() && interaction.customId === 'buy') {
-
-        await interaction.deferReply({ ephemeral: true });
-
-        const item = shopConfig.items[interaction.values[0]];
-
-        pendingPurchases.set(interaction.user.id, {
-            roleId: item.role.id,
-            price: item.price
-        });
-
-        const tax = Math.floor(item.price * (20 / 19) + 1);
-
-        const embed = new EmbedBuilder()
-            .setTitle("💳 تحويل")
-            .setDescription(`حول:\n\`#credit <@${shopConfig.receiver}> ${tax}\``)
-            .setColor("Blue");
-
-        await interaction.editReply({ embeds: [embed] });
+    try {
+        await client.application.commands.set(commands);
+        console.log('✅ تم تحديث الأوامر بنجاح!');
+    } catch (error) {
+        console.error('❌ فشل تحديث الأوامر:', error);
     }
 });
-
-// ===== قراءة تحويل بروبوت =====
+// ================= نظام الدفع التلقائي =================
 client.on('messageCreate', async (message) => {
+    if (!shopConfig.transferChannel || message.channel.id !== shopConfig.transferChannel) return;
+    if (message.author.id !== "282859044593598464") return; // ProBot ID
 
-    if (!shopConfig.transferChannel) return;
-    if (message.channel.id !== shopConfig.transferChannel) return;
-    if (message.author.id !== "282859044593598464") return;
+    if (!message.content.includes("has transferred")) return;
 
-    if (message.content.includes("has transferred")) {
+    const amountMatch = message.content.match(/\$(\d+)/) || message.content.match(/`(\d+)`/) || message.content.match(/(\d+)/);
+    const senderMatch = message.content.match(/<@!?(\d+)>/);
 
-        const amount = message.content.match(/\$(\d+)/);
-        const user = message.content.match(/<@!?(\d+)>/);
+    if (!amountMatch || !senderMatch) return;
 
-        if (!amount || !user) return;
+    const amountReceived = parseInt(amountMatch[1]);
+    const senderId = senderMatch[1];
 
-        const money = parseInt(amount[1]);
-        const userId = user[1];
+    const purchase = pendingPurchases.get(senderId);
 
-        const purchase = pendingPurchases.get(userId);
-
-        if (purchase && money >= purchase.price) {
-
-            const member = await message.guild.members.fetch(userId);
+    if (purchase && amountReceived >= purchase.price) {
+        try {
+            const member = await message.guild.members.fetch(senderId);
             const role = message.guild.roles.cache.get(purchase.roleId);
 
-            await member.roles.add(role);
+            if (member && role) {
+                await member.roles.add(role);
 
-            message.channel.send(`✅ <@${userId}> تم إعطاؤك الرتبة`);
+                const successEmbed = new EmbedBuilder()
+                    .setTitle("✅ تم تسليم الرتبة تلقائياً")
+                    .setDescription(`شكراً <@${senderId}>!\nتم إعطاؤك رتبة **${purchase.roleName}**`)
+                    .setColor("Green")
+                    .setTimestamp();
 
-            pendingPurchases.delete(userId);
+                await message.channel.send({ embeds: [successEmbed] });
+
+                pendingPurchases.delete(senderId);
+            }
+        } catch (error) {
+            console.error("خطأ:", error);
+            message.channel.send(`❌ <@${senderId}> حدث خطأ أثناء إعطاء الرتبة.`).catch(() => {});
         }
     }
 });
-
-// ===== تشغيل =====
-client.on('ready', async () => {
-    console.log(`✅ ${client.user.tag}`);
-    await client.application.commands.set(commands);
-});
-
-client.login(process.env.TOKEN);
