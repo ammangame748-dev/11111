@@ -640,67 +640,60 @@ client.on('ready', async () => {
 });
 // --- نظام التحقق التلقائي من الكريديت وإعطاء الرتبة ---
 // --- نظام التحقق التلقائي المطور (بديل للخربان) ---
-
 client.on('messageCreate', async (message) => {
-    // 1. التأكد من القناة ومن أنه بروبوت
-    if (!shopConfig.transferChannel || message.channel.id !== shopConfig.transferChannel) return;
-    if (message.author.id !== "282859044593598464") return; // ID ProBot الرسمي
 
-    // 2. فحص رسالة التأكيد (دعم للغة العربية والإنجليزية)
-    const isTransferMsg = message.content.includes("has transferred") || message.content.includes("قام بتحويل");
-    const isToReceiver = message.content.includes(shopConfig.receiver);
+    // تجاهل البوتات
+    if (message.author.bot) return;
 
-    if (isTransferMsg && isToReceiver) {
-        
-        // استخراج المبلغ من الرسالة (يدعم الأرقام بين $ أو ` أو الأرقام المجردة)
-        const amountMatch = message.content.match(/\$(\d+)/) || message.content.match(/`(\d+)`/) || message.content.match(/(\d+)/);
-        // استخراج الشخص الذي قام بالتحويل (أول منشن في الرسالة)
-        const senderMatch = message.content.match(/<@!?(\d+)>/);
+    // لازم روم التحويل فقط
+    if (!shopConfig.transferChannel) return;
+    if (message.channel.id !== shopConfig.transferChannel) return;
 
-        if (amountMatch && senderMatch) {
-            const amountReceived = parseInt(amountMatch[1]);
-            const senderId = senderMatch[1];
+    const content = message.content.trim();
 
-            // جلب بيانات الطلب المعلق من الذاكرة
-            const purchase = pendingPurchases.get(senderId);
+    // لازم يبدأ بـ #credit
+    if (!content.startsWith('#credit')) return;
 
-            if (purchase) {
-                // التأكد أن المبلغ المحول يغطي سعر الرتبة (بدون ضريبة أو معها)
-                if (amountReceived >= purchase.price) {
-                    try {
-                        const guild = message.guild;
-                        const member = await guild.members.fetch(senderId);
-                        const role = guild.roles.cache.get(purchase.roleId);
+    const parts = content.split(' ');
+    if (parts.length < 3) return;
 
-                        if (member && role) {
-                            await member.roles.add(role);
-                            
-                            const successEmbed = new EmbedBuilder()
-                                .setTitle("✅ تم التسليم بنجاح")
-                                .setDescription(`شكراً لك <@${senderId}>، تم منحك رتبة **${role.name}** تلقائياً.`)
-                                .setColor("Green")
-                                .setFooter({ text: "نظام المتجر التلقائي" })
-                                .setTimestamp();
+    const mention = parts[1];
+    const amount = Number(parts[2]);
 
-                            await message.channel.send({ content: `<@${senderId}>`, embeds: [successEmbed] });
+    if (isNaN(amount)) return;
 
-                            // مسح الطلب لعدم التكرار
-                            pendingPurchases.delete(senderId);
-                        }
-                    } catch (error) {
-                        console.error("Error giving role:", error);
-                        message.channel.send(`❌ <@${senderId}> حدث خطأ أثناء إعطاء الرتبة. تأكد أن رتبة البوت أعلى من الرتبة المطلوبة.`);
-                    }
-                } else {
-                    message.channel.send(`⚠️ <@${senderId}> المبلغ المحول (\`${amountReceived}\`) أقل من سعر الرتبة (\`${purchase.price}\`).`);
-                }
-            } else {
-                // إذا حول بدون ما يختار من المنيو
-                message.channel.send(`⚠️ <@${senderId}> تم استلام الكريديت، لكن لم يتم العثور على طلب رتبة مسجل باسمك. يرجى الاختيار من القائمة أولاً.`);
-            }
+    const userId = mention.replace(/<@!?|>/g, '');
+
+    const purchase = pendingPurchases.get(userId);
+
+    if (!purchase) {
+        return message.channel.send("⚠️ ما عنده طلب شراء.");
+    }
+
+    const expected = Math.floor(purchase.price * (20 / 19) + 1);
+
+    if (amount < expected) {
+        return message.channel.send("❌ المبلغ غير كافي.");
+    }
+
+    try {
+        const member = await message.guild.members.fetch(userId);
+        const role = message.guild.roles.cache.get(purchase.roleId);
+
+        if (!member || !role) {
+            return message.channel.send("❌ خطأ بالعضو أو الرتبة.");
         }
+
+        await member.roles.add(role);
+
+        message.channel.send(`✅ تم إعطاء <@${userId}> رتبة **${role.name}** تلقائياً`);
+
+        pendingPurchases.delete(userId);
+
+    } catch (err) {
+        console.log(err);
+        message.channel.send("❌ خطأ أثناء إعطاء الرتبة.");
     }
 });
-
 
 client.login(process.env.TOKEN);
