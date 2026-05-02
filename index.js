@@ -644,71 +644,64 @@ client.on('messageCreate', async (message) => {
     if (message.author.id !== "282859044593598464") return; 
 
     const content = message.content;
-    const logChannelId = "1411239985012543538"; // روم اللوجر الخاص بك
+    const logChannelId = "1411239985012543538"; // روم اللوجر
 
-    // 2. فحص لغة الرسالة (عربي أو إنجليزي)
+    // 2. التحقق من لغة الرسالة والكلمات المفتاحية
     const isTransfer = content.includes("قام بتحويل") || content.includes("has transferred");
     const isToReceiver = content.includes(`<@${shopConfig.receiver}>`) || content.includes(shopConfig.receiver);
 
     if (isTransfer && isToReceiver) {
         
-        // استخراج المبلغ واستخراج المشتري
+        // تعديل الـ Regex ليقرأ الرقم سواء كان الدولار قبله $2222 أو بعده 2222$
         const amountMatch = content.match(/(\d+)\$/) || content.match(/\$(\d+)/) || content.match(/`(\d+)`/);
         const senderMatch = content.match(/<@!?(\d+)>/);
 
         if (amountMatch && senderMatch) {
-            const amountReceived = parseInt(amountMatch[1]);
+            const amountReceived = parseInt(amountMatch[1]); // نأخذ الرقم فقط من المجموعة الأولى
             const senderId = senderMatch[1];
             const purchase = pendingPurchases.get(senderId);
 
             if (purchase) {
-                if (amountReceived >= purchase.price) {
+                // التأكد من وصول المبلغ المطلوب (صافي)
+                if (amountReceived >= (purchase.price - 2)) { // سماحية بسيطة 2 كاش
                     try {
                         const member = await message.guild.members.fetch(senderId);
                         const role = message.guild.roles.cache.get(purchase.roleId);
 
                         if (member && role) {
-                            // إعطاء الرتبة
                             await member.roles.add(role);
                             
-                            // 1. رسالة النجاح في روم التحويل
-                            const successEmbed = new EmbedBuilder()
-                                .setTitle("✅ عملية شراء ناجحة")
-                                .setDescription(`شكراً <@${senderId}>، تم تفعيل رتبة **${role.name}** تلقائياً.`)
-                                .setColor("Green")
-                                .setTimestamp();
-                            await message.reply({ embeds: [successEmbed] });
+                            // رسالة النجاح في الشات
+                            await message.reply({ 
+                                content: `✅ كفو <@${senderId}>! تم إعطاؤك رتبة **${role.name}** تلقائياً.` 
+                            });
 
-                            // 2. إرسال اللوج إلى روم اللوجر
+                            // إرسال اللوج
                             const logChannel = client.channels.cache.get(logChannelId);
                             if (logChannel) {
                                 const logEmbed = new EmbedBuilder()
-                                    .setTitle("📝 سجل مبيعات المتجر")
+                                    .setTitle("🛒 مبيعات رتب جديدة")
                                     .addFields(
-                                        { name: "👤 المشتري:", value: `${member.user.tag} (${senderId})`, inline: true },
+                                        { name: "👤 المشتري:", value: `${member.user.username}`, inline: true },
                                         { name: "🏷️ الرتبة:", value: `${role.name}`, inline: true },
-                                        { name: "💰 المبلغ المستلم:", value: `${amountReceived}$`, inline: true }
+                                        { name: "💰 المبلغ:", value: `${amountReceived}$`, inline: true }
                                     )
                                     .setThumbnail(member.user.displayAvatarURL())
-                                    .setColor("Blue")
-                                    .setFooter({ text: "نظام المتجر التلقائي" })
+                                    .setColor("Gold")
                                     .setTimestamp();
                                 
                                 await logChannel.send({ embeds: [logEmbed] });
                             }
 
-                            // مسح الطلب من الذاكرة
                             pendingPurchases.delete(senderId);
                         }
                     } catch (error) {
-                        console.error("Log Error:", error);
-                        message.reply(`❌ حدث خطأ أثناء محاولة إعطاء الرتبة لـ <@${senderId}>.`);
+                        console.error("Error giving role:", error);
+                        message.reply("❌ واجهت مشكلة في إعطاء الرتبة، تأكد أن رتبتي أعلى من الرتب المبيوعة.");
                     }
                 }
             }
         }
     }
 });
-
-
 client.login(process.env.TOKEN);
