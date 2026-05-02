@@ -477,27 +477,37 @@ client.on('interactionCreate', async (interaction) => {
         }
 
         if (interaction.customId === 'role_menu_select') {
-
             const member = interaction.member;
-            const newRoleId = interaction.values[0];
+            const newRoleId = interaction.values[0]; // الرتبة الجديدة اللي اختارها
 
-            const roleIds = roleMenuRoles.map(r => r.id);
+            // 1. استخراج الـ ID لكل الرتب الموجودة في المنيو (الفلتر)
+            const menuRoleIds = roleMenuRoles.map(r => r.id);
 
-            const rolesToRemove = member.roles.cache.filter(role =>
-                roleIds.includes(role.id)
-            );
+            // 2. فحص رتب العضو: أي رتبة عنده موجودة ضمن قائمة المنيو يتم تحديدها للحذف
+            const rolesToRemove = member.roles.cache.filter(role => menuRoleIds.includes(role.id));
 
-            if (rolesToRemove.size > 0) {
-                await member.roles.remove(rolesToRemove);
+            try {
+                // 3. حذف الرتب القديمة (إذا وُجدت)
+                if (rolesToRemove.size > 0) {
+                    await member.roles.remove(rolesToRemove);
+                }
+
+                // 4. إضافة الرتبة الجديدة
+                await member.roles.add(newRoleId);
+
+                await interaction.reply({ 
+                    content: `✅ تم تحديث رتبتك بنجاح! (تم إزالة الرتب السابقة من المنيو)`, 
+                    ephemeral: true 
+                });
+            } catch (error) {
+                console.error(error);
+                await interaction.reply({ 
+                    content: "❌ فشل تحديث الرتب، تأكد أن رتبة البوت أعلى من الرتب المطلوبة.", 
+                    ephemeral: true 
+                });
             }
-
-            await member.roles.add(newRoleId);
-
-            await interaction.reply({
-                content: 'تم تحديث رتبتك بنجاح',
-                ephemeral: true
-            });
         }
+
 
         if (interaction.customId === 'rename_select') {
             const modal = new ModalBuilder()
