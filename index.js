@@ -227,7 +227,6 @@ client.on('messageCreate', async (message) => {
     }
 
 });
-
 client.on('interactionCreate', async (interaction) => {
 
     // ================= CHAT INPUT COMMANDS =================
@@ -332,45 +331,53 @@ client.on('interactionCreate', async (interaction) => {
             }
         }
 
-         if (interaction.commandName === 'shop-setup') {
-            shopConfig.shopChannel = interaction.options.getChannel('shop_channel').id;
-            shopConfig.transferChannel = interaction.options.getChannel('transfer_channel').id;
-            shopConfig.receiver = interaction.options.getUser('receiver').id;
+        if (interaction.commandName === 'shop-setup') {
+            await interaction.deferReply({ flags: [64] });
 
-            shopConfig.items = [];
+            try {
+                shopConfig.shopChannel = interaction.options.getChannel('shop_channel').id;
+                shopConfig.transferChannel = interaction.options.getChannel('transfer_channel').id;
+                shopConfig.receiver = interaction.options.getUser('receiver').id;
 
-            // تعديل الرقم هنا من 15 إلى 11
-            for (let i = 1; i <= 11; i++) {
-                shopConfig.items.push({
-                    role: interaction.options.getRole(`role${i}`),
-                    price: interaction.options.getInteger(`price${i}`)
-                });
+                shopConfig.items = [];
+
+                for (let i = 1; i <= 11; i++) {
+                    const role = interaction.options.getRole(`role${i}`);
+                    const price = interaction.options.getInteger(`price${i}`);
+                    
+                    if (role && price !== null) {
+                        shopConfig.items.push({
+                            role: role,
+                            price: price
+                        });
+                    }
+                }
+
+                await interaction.editReply({ content: `✅ تم إعداد المتجر بنجاح! عدد الرتب المسجلة: ${shopConfig.items.length}` });
+            } catch (error) {
+                console.error(error);
+                await interaction.editReply({ content: "❌ حدث خطأ أثناء الإعداد." });
             }
-
-            await interaction.reply({ content: "✅ تم إعداد المتجر بـ 11 رتبة بنجاح", ephemeral: true });
         }
 
-    }
-          if (interaction.commandName === 'shop') {
+        if (interaction.commandName === 'shop') {
             if (!shopConfig.shopChannel || shopConfig.items.length === 0) {
-                return interaction.reply({ content: "⚠️ يجب إعداد المتجر أولاً باستخدام `/shop-setup`", ephemeral: true });
+                return interaction.reply({ content: "⚠️ لازم تسوي setup أول", ephemeral: true });
             }
 
-            // جلب البيانات المخصصة من الأمر
             const userDescription = interaction.options.getString('description');
             const userImage = interaction.options.getAttachment('image');
 
             const shopEmbed = new EmbedBuilder()
                 .setTitle("🛒 متجر الرتب")
-                .setDescription(userDescription) // الوصف اللي كتبته بالأمر
+                .setDescription(userDescription)
                 .setColor("Gold");
 
-            // إذا رفعت صورة، البوت رح يحطها بالإيمباد
             if (userImage) shopEmbed.setImage(userImage.url);
 
             const menu = new StringSelectMenuBuilder()
                 .setCustomId('buy_role_menu')
-                .setPlaceholder('اختر رتبة للشراء')
+                .setPlaceholder('اختر رتبة')
                 .addOptions(
                     shopConfig.items.map((item, index) => ({
                         label: item.role.name,
@@ -383,9 +390,9 @@ client.on('interactionCreate', async (interaction) => {
             const channel = interaction.guild.channels.cache.get(shopConfig.shopChannel);
             
             await channel.send({ embeds: [shopEmbed], components: [row] });
-            await interaction.reply({ content: "✅ تم نشر المتجر المخصص بنجاح!", ephemeral: true });
+            await interaction.reply({ content: "✅ تم نشر المتجر", ephemeral: true });
         }
-
+    }
 
     // ================= MODALS =================
     if (interaction.type === InteractionType.ModalSubmit) {
@@ -400,14 +407,14 @@ client.on('interactionCreate', async (interaction) => {
             const row = new ActionRowBuilder().addComponents(
                 new StringSelectMenuBuilder()
                     .setCustomId('open_t_menu')
-                    .setPlaceholder('اضغط هنا لفتح تذكرة')
+                    .setPlaceholder('فتح تذكرة')
                     .addOptions([
-                        { label: 'فتح تذكرة جديدة', value: 'create_ticket', emoji: lastTicketEmoji }
+                        { label: 'فتح تذكرة', value: 'create_ticket', emoji: lastTicketEmoji }
                     ])
             );
 
             await interaction.channel.send({ embeds: [embed], components: [row] });
-            await interaction.reply({ content: "✅ تم النشر", ephemeral: true });
+            await interaction.reply({ content: "✅ تم", ephemeral: true });
         }
 
         if (interaction.customId === 'r_setup') {
@@ -419,272 +426,106 @@ client.on('interactionCreate', async (interaction) => {
             const row = new ActionRowBuilder().addComponents(
                 new StringSelectMenuBuilder()
                     .setCustomId('rename_select')
-                    .setPlaceholder('اختر لتغيير اسمك')
+                    .setPlaceholder('تغيير الاسم')
                     .addOptions([
-                        { label: 'تغيير الاسم المستعار', value: 'go', emoji: lastRenameEmoji }
+                        { label: 'تغيير الاسم', value: 'go', emoji: lastRenameEmoji }
                     ])
             );
 
             await interaction.channel.send({ embeds: [embed], components: [row] });
-            await interaction.reply({ content: "✅ تم النشر", ephemeral: true });
-        }
-
-        if (interaction.customId === 'actual_name_change') {
-            const name = interaction.fields.getTextInputValue('new_name');
-            try {
-                await interaction.member.setNickname(name);
-                await interaction.reply({ content: `✅ صار اسمك: ${name}`, ephemeral: true });
-            } catch {
-                await interaction.reply({ content: "❌ لا أستطيع تغيير اسمك!", ephemeral: true });
-            }
-        }
-
-        if (interaction.customId === 'modal_rename_ch') {
-            await interaction.channel.setName(interaction.fields.getTextInputValue('new_ch_name'));
-            await interaction.reply({ content: `✅ تم تغيير اسم التذكرة`, ephemeral: true });
-        }
-
-        if (interaction.customId === 'modal_add_user') {
-            const id = interaction.fields.getTextInputValue('user_id');
-            await interaction.channel.permissionOverwrites.create(id, { ViewChannel: true, SendMessages: true });
-            await interaction.reply({ content: `✅ تم إضافة <@${id}> للتذكرة.` });
-        }
-
-        if (interaction.customId === 'modal_remove_user') {
-            const id = interaction.fields.getTextInputValue('user_id');
-            await interaction.channel.permissionOverwrites.delete(id);
-            await interaction.reply({ content: `✅ تم إزالة <@${id}> من التذكرة.` });
+            await interaction.reply({ content: "✅ تم", ephemeral: true });
         }
     }
 
     // ================= SELECT MENUS =================
     if (interaction.isStringSelectMenu()) {
 
-        if (interaction.customId === 'open_t_menu') {
+        if (interaction.customId === 'role_menu_select') {
+            await interaction.deferReply({ flags: [64] });
+            const member = interaction.member;
+            const selectedRoleId = interaction.values[0];
 
-            const ch = await interaction.guild.channels.create({
-                name: `ticket-${interaction.user.username}`,
-                permissionOverwrites: [
-                    { id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
-                    { id: interaction.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
-                ],
-            });
-
-            await interaction.reply({ content: `تذكرتك: ${ch}`, ephemeral: true });
-
-            const eb = new EmbedBuilder()
-                .setTitle("🎫 تذكرة جديدة")
-                .setDescription(`مرحباً ${interaction.user}`)
-                .setColor("Green");
-
-            if (lastTicketImage) eb.setImage(lastTicketImage);
-
-            const r1 = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId('claim_t').setLabel('استلام').setStyle(ButtonStyle.Success),
-                new ButtonBuilder().setCustomId('close_t').setLabel('إغلاق').setStyle(ButtonStyle.Danger),
-                new ButtonBuilder().setCustomId('call_owner').setLabel('منشن صاحبها').setStyle(ButtonStyle.Secondary)
-            );
-
-            const r2 = new ActionRowBuilder().addComponents(
-                new StringSelectMenuBuilder()
-                    .setCustomId('ticket_actions')
-                    .setPlaceholder('خيارات التذكرة')
-                    .addOptions([
-                        { label: 'إضافة شخص', value: 'add_user', emoji: '➕' },
-                        { label: 'إزالة شخص', value: 'remove_user', emoji: '➖' },
-                        { label: 'تغيير اسم', value: 'rename_t', emoji: '📝' }
-                    ])
-            );
-
-            await ch.send({ embeds: [eb], components: [r1, r2] });
-        }
-
-if (interaction.customId === 'role_menu_select') {
-    // 1. نخبر ديسكورد إن البوت استلم الطلب وعم يعالج البيانات
-    await interaction.deferReply({ ephemeral: true });
-
-    const member = interaction.member;
-    const selectedRoleId = interaction.values[0];
-
-    try {
-        const menuRoleIds = roleMenuRoles.map(r => r.id);
-        await member.roles.remove(menuRoleIds);
-        await member.roles.add(selectedRoleId);
-
-        // 2. نعدل الرد الأول بنتيجة النجاح
-        await interaction.editReply({
-            content: "✅ تم تحديث رتبتك بنجاح!"
-        });
-
-    } catch (error) {
-        console.error(error);
-        // 3. نعدل الرد الأول في حال الخطأ بدل إرسال رد جديد
-        await interaction.editReply({
-            content: "❌ فشلت العملية: تأكد أن رتبة البوت أعلى من الرتب المختارة."
-        });
-    }
-}
-
-
-
-        if (interaction.customId === 'rename_select') {
-            const modal = new ModalBuilder()
-                .setCustomId('actual_name_change')
-                .setTitle('تغيير الاسم');
-
-            modal.addComponents(
-                new ActionRowBuilder().addComponents(
-                    new TextInputBuilder()
-                        .setCustomId('new_name')
-                        .setLabel("اكتب اسمك الجديد")
-                        .setStyle(TextInputStyle.Short)
-                )
-            );
-
-            await interaction.showModal(modal);
-        }
-
-        if (interaction.customId === 'ticket_actions') {
-
-            const act = interaction.values[0];
-
-            const modal = new ModalBuilder()
-                .setCustomId(`modal_${act}`)
-                .setTitle('إجراء التذكرة');
-
-            modal.addComponents(
-                new ActionRowBuilder().addComponents(
-                    new TextInputBuilder()
-                        .setCustomId(act === 'rename_t' ? 'new_ch_name' : 'user_id')
-                        .setLabel(act === 'rename_t' ? "الاسم الجديد" : "ID العضو")
-                        .setStyle(TextInputStyle.Short)
-                )
-            );
-
-            await interaction.showModal(modal);
-        }
-    }
-            if (interaction.isStringSelectMenu()) {
-            if (interaction.customId === 'buy_role_menu') {
-                // 1. الرد فوراً بـ "تفكير" عشان ما يعطي Unknown Interaction
-                await interaction.deferReply({ ephemeral: true });
-
-                const itemIndex = parseInt(interaction.values[0]);
-                const selectedItem = shopConfig.items[itemIndex];
-
-                // 2. التحقق إذا الرتبة موجودة في الإعدادات
-                if (!selectedItem || !selectedItem.role) {
-                    return interaction.editReply({ content: "❌ فشل جلب بيانات الرتبة، يرجى إعادة إعداد المتجر بـ /shop-setup" });
-                }
-
-                // 3. حفظ الطلب في الذاكرة (تأكد أن pendingPurchases معرفة فوق)
-                if (typeof pendingPurchases !== 'undefined') {
-                    pendingPurchases.set(interaction.user.id, {
-                        roleId: selectedItem.role.id,
-                        price: selectedItem.price
-                    });
-                }
-
-                const receiverId = shopConfig.receiver; 
-                const taxPrice = Math.floor(selectedItem.price * (20 / 19) + 1);
-
-                const buyEmbed = new EmbedBuilder()
-                    .setTitle("💳 طلب شراء رتبة")
-                    .setDescription(`لقد اخترت: ${selectedItem.role}\nالسعر الصافي: \`${selectedItem.price}\`\n\n**أمر التحويل (اضغط للنسخ):**\n\`#credit <@${receiverId}> ${taxPrice}\``) 
-                    .setColor("Blue")
-                    .setFooter({ text: "سيتم إعطاؤك الرتبة تلقائياً فور التحويل" });
-
-                // 4. استخدام editReply بدل reply لأننا عملنا defer
-                await interaction.editReply({ embeds: [buyEmbed] });
-
-                const transferChannel = interaction.guild.channels.cache.get(shopConfig.transferChannel);
-                if (transferChannel) {
-                    transferChannel.send({ 
-                        content: `🔔 طلب جديد: <@${interaction.user.id}> اختار رتبة **${selectedItem.role.name}**. ننتظر التحويل...` 
-                    }).catch(() => {});
-                }
+            try {
+                const menuRoleIds = roleMenuRoles.map(r => r.id);
+                await member.roles.remove(menuRoleIds);
+                await member.roles.add(selectedRoleId);
+                await interaction.editReply({ content: "✅ تم إعطاء الرتبة" });
+            } catch {
+                await interaction.editReply({ content: "❌ خطأ بالرتب" });
             }
         }
 
+        if (interaction.customId === 'buy_role_menu') {
+            await interaction.deferReply({ flags: [64] });
 
+            const itemIndex = parseInt(interaction.values[0]);
+            const selectedItem = shopConfig.items[itemIndex];
 
-    // ================= BUTTONS (الأزرار) =================
-    if (interaction.isButton()) {
+            pendingPurchases.set(interaction.user.id, {
+                roleId: selectedItem.role.id,
+                price: selectedItem.price
+            });
 
-        if (interaction.customId === 'claim_t') {
-            await interaction.reply(`✅ تم الاستلام بواسطة: ${interaction.user}`);
-        }
+            const receiverId = shopConfig.receiver; 
+            const taxPrice = Math.floor(selectedItem.price * (20 / 19) + 1);
 
-        if (interaction.customId === 'close_t') {
-            await interaction.reply("جاري إغلاق التذكرة وحذفها خلال 3 ثوانٍ...");
-            setTimeout(() => interaction.channel.delete().catch(() => {}), 3000);
-        }
+            const embed = new EmbedBuilder()
+                .setDescription(`\`#credit <@${receiverId}> ${taxPrice}\``)
+                .setColor("Blue");
 
-        if (interaction.customId === 'call_owner') {
-            // ملاحظة: تأكد أنك تخزن من فتح التذكرة إذا أردت عمل منشن فعلي
-            await interaction.reply(`🔔 تم طلب حضور صاحب التذكرة!`);
+            await interaction.editReply({ embeds: [embed] });
         }
     }
+
+    // ================= BUTTONS =================
+    if (interaction.isButton()) {
+        if (interaction.customId === 'close_t') {
+            await interaction.reply("جاري الإغلاق...");
+            setTimeout(() => interaction.channel.delete(), 3000);
+        }
+    }
+
 });
+
 client.on('ready', async () => {
     console.log(`✅ ${client.user.tag} متصل وجاهز!`);
-
     try {
-        // هذا السطر هو المسؤول عن إرسال الأوامر لديسكورد وتحديثها فوراً
         await client.application.commands.set(commands);
         console.log('✅ تم تحديث أوامر السلاش بنجاح!');
     } catch (error) {
         console.error('❌ فشل تحديث الأوامر:', error);
     }
 });
-// --- نظام التحقق التلقائي من الكريديت وإعطاء الرتبة ---
 
 client.on('messageCreate', async (message) => {
-    // 1. التأكد أن الرسالة في روم التحويل المحددة وأنها من بوت البروبوت
     if (!shopConfig.transferChannel || message.channel.id !== shopConfig.transferChannel) return;
-    if (message.author.id !== "282859044593598464") return; // ID ProBot
+    if (message.author.id !== "282859044593598464") return;
 
-    // 2. فحص إذا كانت الرسالة هي رسالة تأكيد تحويل (بيدعم المنشن والأي دي)
     if (message.content.includes("has transferred") && (message.content.includes(`<@${shopConfig.receiver}>`) || message.content.includes(shopConfig.receiver))) {
-        
-        // استخراج المبلغ واستخراج المرسل (بين علامتي المنشن <@...>)
         const amountMatch = message.content.match(/\$(\d+)/) || message.content.match(/`(\d+)`/);
         const senderMatch = message.content.match(/<@!?(\d+)>/);
 
         if (amountMatch && senderMatch) {
             const amountReceived = parseInt(amountMatch[1]);
             const senderId = senderMatch[1];
-
-            // 3. البحث في الذاكرة: هل هذا الشخص ضغط على رتبة معينة بالمنيو قبل شوي؟
             const purchase = pendingPurchases.get(senderId);
 
-            // التحقق من أن الشخص طلب رتبة وأن المبلغ المحول يطابق سعرها
             if (purchase && amountReceived >= purchase.price) {
                 try {
                     const member = await message.guild.members.fetch(senderId);
                     const role = message.guild.roles.cache.get(purchase.roleId);
-
                     if (member && role) {
                         await member.roles.add(role);
-                        
                         const successEmbed = new EmbedBuilder()
                             .setTitle("✅ تم تسليم الرتبة تلقائياً")
-                            .setDescription(`شكراً لك <@${senderId}>، تم إعطاؤك رتبة **${role.name}** بنجاح بناءً على اختيارك.`)
-                            .setColor("Green")
-                            .setTimestamp();
-
+                            .setDescription(`شكراً لك <@${senderId}>، تم إعطاؤك رتبة **${role.name}** بنجاح.`)
+                            .setColor("Green");
                         await message.channel.send({ embeds: [successEmbed] });
-
-                        // مسح الطلب من الذاكرة بعد النجاح
                         pendingPurchases.delete(senderId);
                     }
                 } catch (error) {
-                    console.error("خطأ في إعطاء الرتبة:", error);
-                    await message.channel.send(`❌ <@${senderId}>، حولت المبلغ بس البوت واجه مشكلة (تأكد أن رتبة البوت أعلى من الرتب المبيوعة).`);
+                    console.error(error);
                 }
-            } else {
-                // إذا الشخص حول مبلغ بس ما كان مختار رتبة من المنيو
-                await message.channel.send(`⚠️ <@${senderId}>، يرجى اختيار الرتبة من المنيو أولاً ثم التحويل لتفعيلها تلقائياً.`);
             }
         }
     }
