@@ -102,60 +102,29 @@ client.on('ready', async () => {
             ]
         },
 
+  // استبدل قسم shop-setup في المصفوفة بهذا الكود:
         {
             name: 'shop-setup',
-            description: 'إعداد متجر الرتب (15 رتبة)',
+            description: 'إعداد متجر الرتب (بحد أقصى 11 رتبة)',
             options: [
                 { name: 'shop_channel', type: 7, description: 'روم المتجر', required: true },
                 { name: 'transfer_channel', type: 7, description: 'روم التحويل/الطلبات', required: true },
                 { name: 'receiver', type: 6, description: 'الشخص المستلم للكريديت', required: true },
-
-                { name: 'role1', type: 8, required: true },
-                { name: 'price1', type: 4, required: true },
-
-                { name: 'role2', type: 8, required: true },
-                { name: 'price2', type: 4, required: true },
-
-                { name: 'role3', type: 8, required: true },
-                { name: 'price3', type: 4, required: true },
-
-                { name: 'role4', type: 8, required: true },
-                { name: 'price4', type: 4, required: true },
-
-                { name: 'role5', type: 8, required: true },
-                { name: 'price5', type: 4, required: true },
-
-                { name: 'role6', type: 8, required: true },
-                { name: 'price6', type: 4, required: true },
-
-                { name: 'role7', type: 8, required: true },
-                { name: 'price7', type: 4, required: true },
-
-                { name: 'role8', type: 8, required: true },
-                { name: 'price8', type: 4, required: true },
-
-                { name: 'role9', type: 8, required: true },
-                { name: 'price9', type: 4, required: true },
-
-                { name: 'role10', type: 8, required: true },
-                { name: 'price10', type: 4, required: true },
-
-                { name: 'role11', type: 8, required: true },
-                { name: 'price11', type: 4, required: true },
-
-                { name: 'role12', type: 8, required: true },
-                { name: 'price12', type: 4, required: true },
-
-                { name: 'role13', type: 8, required: true },
-                { name: 'price13', type: 4, required: true },
-
-                { name: 'role14', type: 8, required: true },
-                { name: 'price14', type: 4, required: true },
-
-                { name: 'role15', type: 8, required: true },
-                { name: 'price15', type: 4, required: true }
+                // رتبة 1 إلى 11 (المجموع 22 خياراً إضافياً + 3 أساسية = 25)
+                { name: 'role1', type: 8, required: true }, { name: 'price1', type: 4, required: true },
+                { name: 'role2', type: 8, required: true }, { name: 'price2', type: 4, required: true },
+                { name: 'role3', type: 8, required: true }, { name: 'price3', type: 4, required: true },
+                { name: 'role4', type: 8, required: true }, { name: 'price4', type: 4, required: true },
+                { name: 'role5', type: 8, required: true }, { name: 'price5', type: 4, required: true },
+                { name: 'role6', type: 8, required: true }, { name: 'price6', type: 4, required: true },
+                { name: 'role7', type: 8, required: true }, { name: 'price7', type: 4, required: true },
+                { name: 'role8', type: 8, required: true }, { name: 'price8', type: 4, required: true },
+                { name: 'role9', type: 8, required: true }, { name: 'price9', type: 4, required: true },
+                { name: 'role10', type: 8, required: true }, { name: 'price10', type: 4, required: true },
+                { name: 'role11', type: 8, required: true }, { name: 'price11', type: 4, required: true }
             ]
         },
+
 
         {
             name: 'shop',
@@ -352,23 +321,24 @@ client.on('interactionCreate', async (interaction) => {
             }
         }
 
-        if (interaction.commandName === 'shop-setup') {
-
+         if (interaction.commandName === 'shop-setup') {
             shopConfig.shopChannel = interaction.options.getChannel('shop_channel').id;
             shopConfig.transferChannel = interaction.options.getChannel('transfer_channel').id;
             shopConfig.receiver = interaction.options.getUser('receiver').id;
 
             shopConfig.items = [];
 
-            for (let i = 1; i <= 15; i++) {
+            // تعديل الرقم هنا من 15 إلى 11
+            for (let i = 1; i <= 11; i++) {
                 shopConfig.items.push({
                     role: interaction.options.getRole(`role${i}`),
                     price: interaction.options.getInteger(`price${i}`)
                 });
             }
 
-            await interaction.reply({ content: "تم إعداد المتجر بنجاح", ephemeral: true });
+            await interaction.reply({ content: "✅ تم إعداد المتجر بـ 11 رتبة بنجاح", ephemeral: true });
         }
+
     }
 
     // ================= MODALS =================
