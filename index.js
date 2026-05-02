@@ -37,19 +37,12 @@ app.listen(port, () => {
   console.log(`Web Server is running on port ${port}`);
 });
 
-client.on('ready', async () => {
-    console.log(`✅ ${client.user.tag} متصل وجاهز!`);
-
     const commands = [
-
         {
             name: 'set-line',
             description: 'تحديد بنر الخط التلقائي (ارفع صورة)',
-            options: [
-                { name: 'image', description: 'ارفع صورة الخط', type: 11, required: true }
-            ]
+            options: [{ name: 'image', description: 'ارفع صورة الخط', type: 11, required: true }]
         },
-
         {
             name: 'role-menu',
             description: 'إنشاء منيو رتب (8 رتب)',
@@ -65,7 +58,6 @@ client.on('ready', async () => {
                 { name: 'title', type: 3, description: 'عنوان الإيمباد', required: false }
             ]
         },
-
         {
             name: 'setup-ticket',
             description: 'إعداد بانل التذاكر (منيو)',
@@ -74,7 +66,6 @@ client.on('ready', async () => {
                 { name: 'emoji_id', description: 'ضع ID الإيموجي للمنيو', type: 3, required: true }
             ]
         },
-
         {
             name: 'setup-rename',
             description: 'إعداد قائمة تغيير الأسماء (منيو)',
@@ -83,7 +74,6 @@ client.on('ready', async () => {
                 { name: 'emoji', description: 'ضع الإيموجي للمنيو', type: 3, required: true }
             ]
         },
-
         {
             name: 'ban',
             description: 'طرد نهائي (باند)',
@@ -92,7 +82,6 @@ client.on('ready', async () => {
                 { name: 'reason', description: 'سبب الحظر', type: 3, required: false }
             ]
         },
-
         {
             name: 'timeout',
             description: 'تايم آوت',
@@ -101,41 +90,31 @@ client.on('ready', async () => {
                 { name: 'duration', description: 'المدة بالدقائق', type: 4, required: true }
             ]
         },
-
-  // استبدل قسم shop-setup في المصفوفة بهذا الكود:
         {
             name: 'shop-setup',
-            description: 'إعداد متجر الرتب (بحد أقصى 11 رتبة)',
+            description: 'إعداد متجر الرتب (11 رتبة)',
             options: [
                 { name: 'shop_channel', type: 7, description: 'روم المتجر', required: true },
-                { name: 'transfer_channel', type: 7, description: 'روم التحويل/الطلبات', required: true },
-                { name: 'receiver', type: 6, description: 'الشخص المستلم للكريديت', required: true },
-                // رتبة 1 إلى 11 (المجموع 22 خياراً إضافياً + 3 أساسية = 25)
-                { name: 'role1', type: 8, required: true }, { name: 'price1', type: 4, required: true },
-                { name: 'role2', type: 8, required: true }, { name: 'price2', type: 4, required: true },
-                { name: 'role3', type: 8, required: true }, { name: 'price3', type: 4, required: true },
-                { name: 'role4', type: 8, required: true }, { name: 'price4', type: 4, required: true },
-                { name: 'role5', type: 8, required: true }, { name: 'price5', type: 4, required: true },
-                { name: 'role6', type: 8, required: true }, { name: 'price6', type: 4, required: true },
-                { name: 'role7', type: 8, required: true }, { name: 'price7', type: 4, required: true },
-                { name: 'role8', type: 8, required: true }, { name: 'price8', type: 4, required: true },
-                { name: 'role9', type: 8, required: true }, { name: 'price9', type: 4, required: true },
-                { name: 'role10', type: 8, required: true }, { name: 'price10', type: 4, required: true },
-                { name: 'role11', type: 8, required: true }, { name: 'price11', type: 4, required: true }
+                { name: 'transfer_channel', type: 7, description: 'روم التحويل', required: true },
+                { name: 'receiver', type: 6, description: 'المستلم للكريديت', required: true },
+                { name: 'role1', type: 8, description: 'الرتبة 1', required: true }, { name: 'price1', type: 4, description: 'سعر 1', required: true },
+                { name: 'role2', type: 8, description: 'الرتبة 2', required: true }, { name: 'price2', type: 4, description: 'سعر 2', required: true },
+                { name: 'role3', type: 8, description: 'الرتبة 3', required: true }, { name: 'price3', type: 4, description: 'سعر 3', required: true },
+                { name: 'role4', type: 8, description: 'الرتبة 4', required: true }, { name: 'price4', type: 4, description: 'سعر 4', required: true },
+                { name: 'role5', type: 8, description: 'الرتبة 5', required: true }, { name: 'price5', type: 4, description: 'سعر 5', required: true },
+                { name: 'role6', type: 8, description: 'الرتبة 6', required: true }, { name: 'price6', type: 4, description: 'سعر 6', required: true },
+                { name: 'role7', type: 8, description: 'الرتبة 7', required: true }, { name: 'price7', type: 4, description: 'سعر 7', required: true },
+                { name: 'role8', type: 8, description: 'الرتبة 8', required: true }, { name: 'price8', type: 4, description: 'سعر 8', required: true },
+                { name: 'role9', type: 8, description: 'الرتبة 9', required: true }, { name: 'price9', type: 4, description: 'سعر 9', required: true },
+                { name: 'role10', type: 8, description: 'الرتبة 10', required: true }, { name: 'price10', type: 4, description: 'سعر 10', required: true },
+                { name: 'role11', type: 8, description: 'الرتبة 11', required: true }, { name: 'price11', type: 4, description: 'سعر 11', required: true }
             ]
         },
-
-
         {
             name: 'shop',
             description: 'نشر متجر الرتب'
         }
-
     ];
-
-    await client.application.commands.set(commands);
-
-});
 
 // منع الكراش
 process.on('unhandledRejection', error => { console.error('Error:', error); });
