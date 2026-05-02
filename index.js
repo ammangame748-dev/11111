@@ -41,8 +41,11 @@ app.listen(port, () => {
         {
             name: 'set-line',
             description: 'تحديد بنر الخط التلقائي (ارفع صورة)',
-            options: [{ name: 'image', description: 'ارفع صورة الخط', type: 11, required: true }]
+            options: [
+                { name: 'image', description: 'ارفع صورة الخط', type: 11, required: true }
+            ]
         },
+
         {
             name: 'role-menu',
             description: 'إنشاء منيو رتب (8 رتب)',
@@ -58,6 +61,7 @@ app.listen(port, () => {
                 { name: 'title', type: 3, description: 'عنوان الإيمباد', required: false }
             ]
         },
+
         {
             name: 'setup-ticket',
             description: 'إعداد بانل التذاكر (منيو)',
