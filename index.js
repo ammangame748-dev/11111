@@ -101,12 +101,38 @@ app.listen(port, () => {
                 { name: 'shop_channel', type: 7, description: 'روم المتجر', required: true },
                 { name: 'transfer_channel', type: 7, description: 'روم التحويل', required: true },
                 { name: 'receiver', type: 6, description: 'المستلم للكريديت', required: true },
-                { name: 'role1', type: 8, description: 'الرتبة 1', required: true }, { name: 'price1', type: 4, description: 'سعر 1', required: true },
-                { name: 'role2', type: 8, description: 'الرتبة 2', required: true }, { name: 'price2', type: 4, description: 'سعر 2', required: true },
-                { name: 'role3', type: 8, description: 'الرتبة 3', required: true }, { name: 'price3', type: 4, description: 'سعر 3', required: true },
-                { name: 'role4', type: 8, description: 'الرتبة 4', required: true }, { name: 'price4', type: 4, description: 'سعر 4', required: true },
-                { name: 'role5', type: 8, description: 'الرتبة 5', required: true }, { name: 'price5', type: 4, description: 'سعر 5', required: true },
-                { name: 'role6', type: 8, description: 'الرتبة 6', required: true }, { name: 'price6', type: 4, description: 'سعر 6', required: true },
+{ name: 'role1', type: 8, description: 'الرتبة 1', required: true },
+{ name: 'price1', type: 4, description: 'سعر 1', required: true },
+
+{ name: 'role2', type: 8, description: 'الرتبة 2', required: true },
+{ name: 'price2', type: 4, description: 'سعر 2', required: true },
+
+{ name: 'role3', type: 8, description: 'الرتبة 3', required: true },
+{ name: 'price3', type: 4, description: 'سعر 3', required: true },
+
+{ name: 'role4', type: 8, description: 'الرتبة 4', required: true },
+{ name: 'price4', type: 4, description: 'سعر 4', required: true },
+
+{ name: 'role5', type: 8, description: 'الرتبة 5', required: true },
+{ name: 'price5', type: 4, description: 'سعر 5', required: true },
+
+{ name: 'role6', type: 8, description: 'الرتبة 6', required: true },
+{ name: 'price6', type: 4, description: 'سعر 6', required: true },
+
+{ name: 'role7', type: 8, description: 'الرتبة 7', required: true },
+{ name: 'price7', type: 4, description: 'سعر 7', required: true },
+
+{ name: 'role8', type: 8, description: 'الرتبة 8', required: true },
+{ name: 'price8', type: 4, description: 'سعر 8', required: true },
+
+{ name: 'role9', type: 8, description: 'الرتبة 9', required: true },
+{ name: 'price9', type: 4, description: 'سعر 9', required: true },
+
+{ name: 'role10', type: 8, description: 'الرتبة 10', required: true },
+{ name: 'price10', type: 4, description: 'سعر 10', required: true },
+
+{ name: 'role11', type: 8, description: 'الرتبة 11', required: true },
+{ name: 'price11', type: 4, description: 'سعر 11', required: true },
                
             ]
         },
