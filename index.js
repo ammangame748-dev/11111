@@ -642,59 +642,58 @@ client.on('ready', async () => {
 // --- نظام التحقق التلقائي الصحيح (انتظار تأكيد بروبوت) ---
 
 client.on('messageCreate', async (message) => {
-    // 1. السماح لبروبوت فقط بالمرور (نحذف شرط تجاهل البوتات العام)
-    if (message.author.id !== "282859044593598464") return; 
 
-    // 2. التأكد أننا في روم التحويل المحددة
-    if (!shopConfig.transferChannel || message.channel.id !== shopConfig.transferChannel) return;
+    // تجاهل البوتات
+    if (message.author.bot) return;
 
-    // 3. فحص رسالة التأكيد من بروبوت (دعم عربي وإنجليزي)
-    const isTransfer = message.content.includes("has transferred") || message.content.includes("قام بتحويل");
-    const isToReceiver = message.content.includes(shopConfig.receiver);
+    // لازم روم التحويل فقط
+    if (!shopConfig.transferChannel) return;
+    if (message.channel.id !== shopConfig.transferChannel) return;
 
-    if (isTransfer && isToReceiver) {
-        // استخراج المبلغ والشخص المحوّل (sender) من رسالة بروبوت
-        const amountMatch = message.content.match(/(\d+)/); // بياخد أول رقم بالرسالة وهو المبلغ
-        const senderMatch = message.content.match(/<@!?(\d+)>/); // بياخد أول منشن وهو الشخص اللي حول
+    const content = message.content.trim();
 
-        if (amountMatch && senderMatch) {
-            const amountReceived = parseInt(amountMatch[1]);
-            const senderId = senderMatch[1];
+    // لازم يبدأ بـ #credit
+    if (!content.startsWith('#credit')) return;
 
-            // البحث عن طلب الشخص في الذاكرة (سواء كان في نفس الروم أو روم ثاني)
-            const purchase = pendingPurchases.get(senderId);
+    const parts = content.split(' ');
+    if (parts.length < 3) return;
 
-            if (purchase) {
-                // التأكد أن المبلغ المحول كافي (يساوي أو أكبر من السعر الصافي)
-                if (amountReceived >= purchase.price) {
-                    try {
-                        const member = await message.guild.members.fetch(senderId);
-                        const role = message.guild.roles.cache.get(purchase.roleId);
+    const mention = parts[1];
+    const amount = Number(parts[2]);
 
-                        if (member && role) {
-                            await member.roles.add(role);
-                            
-                            const successEmbed = new EmbedBuilder()
-                                .setTitle("✅ تم التسليم التلقائي")
-                                .setDescription(`كفو <@${senderId}>، استلمت رتبة **${role.name}** بنجاح.`)
-                                .setColor("Green")
-                                .setTimestamp();
+    if (isNaN(amount)) return;
 
-                            await message.channel.send({ content: `<@${senderId}>`, embeds: [successEmbed] });
+    const userId = mention.replace(/<@!?|>/g, '');
 
-                            // حذف الطلب عشان ما يتكرر
-                            pendingPurchases.delete(senderId);
-                        }
-                    } catch (error) {
-                        console.error("Error giving role:", error);
-                        message.channel.send("❌ فشلت في إعطاء الرتبة، تأكد أن رتبة البوت أعلى من الرتب المعروضة.");
-                    }
-                } else {
-                    message.channel.send(`⚠️ <@${senderId}> المبلغ المحول ناقص، سعر الرتبة هو \`${purchase.price}\`.`);
-                }
-            }
+    const purchase = pendingPurchases.get(userId);
+
+    if (!purchase) {
+        return message.channel.send("⚠️ ما عنده طلب شراء.");
+    }
+
+    const expected = Math.floor(purchase.price * (20 / 19) + 1);
+
+    if (amount < expected) {
+        return message.channel.send("❌ المبلغ غير كافي.");
+    }
+
+    try {
+        const member = await message.guild.members.fetch(userId);
+        const role = message.guild.roles.cache.get(purchase.roleId);
+
+        if (!member || !role) {
+            return message.channel.send("❌ خطأ بالعضو أو الرتبة.");
         }
+
+        await member.roles.add(role);
+
+        message.channel.send(`✅ تم إعطاء <@${userId}> رتبة **${role.name}** تلقائياً`);
+
+        pendingPurchases.delete(userId);
+
+    } catch (err) {
+        console.log(err);
+        message.channel.send("❌ خطأ أثناء إعطاء الرتبة.");
     }
 });
-
 client.login(process.env.TOKEN);
