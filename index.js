@@ -576,35 +576,33 @@ if (interaction.customId === 'role_menu_select') {
                     return interaction.reply({ content: "❌ لم يتم العثور على الرتبة.", ephemeral: true });
                 }
 
-                // 1. حفظ الطلب في الذاكرة (عشان نعرف أي رتبة بدو لما يحول)
+                // 1. حفظ الطلب في الذاكرة
                 pendingPurchases.set(interaction.user.id, {
                     roleId: selectedItem.role.id,
                     price: selectedItem.price
                 });
 
-               // ... داخل كود المنيو ...
+                const receiverId = shopConfig.receiver; 
+                const taxPrice = Math.floor(selectedItem.price * (20 / 19) + 1);
 
-const receiverId = shopConfig.receiver; // الآيدي الخاص بالمستلم
-const taxPrice = Math.floor(selectedItem.price * (20 / 19) + 1);
-
-const buyEmbed = new EmbedBuilder()
-    .setTitle("💳 طلب شراء رتبة")
-    .setDescription(`لقد اخترت: ${selectedItem.role}\nالسعر: \`${selectedItem.price}\`\n\n**أمر التحويل (اضغط للنسخ):**\n\`#credit <@${receiverId}> ${taxPrice}\``) 
-    .setColor("Blue")
-    .setFooter({ text: "سيتم إعطاؤك الرتبة تلقائياً فور التحويل" });
-
+                const buyEmbed = new EmbedBuilder()
+                    .setTitle("💳 طلب شراء رتبة")
+                    .setDescription(`لقد اخترت: ${selectedItem.role}\nالسعر الصافي: \`${selectedItem.price}\`\n\n**أمر التحويل (اضغط للنسخ):**\n\`#credit <@${receiverId}> ${taxPrice}\``) 
+                    .setColor("Blue")
+                    .setFooter({ text: "سيتم إعطاؤك الرتبة تلقائياً فور التحويل" });
 
                 await interaction.reply({ embeds: [buyEmbed], ephemeral: true });
 
-                // 2. إرسال رسالة لروم التحويل (داخل قوس المنيو عشان يشتغل صح)
+                // 2. إرسال إشعار لروم التحويل
                 const transferChannel = interaction.guild.channels.cache.get(shopConfig.transferChannel);
                 if (transferChannel) {
                     transferChannel.send({ 
-                        content: `🔔 طلب جديد: <@${interaction.user.id}> يريد شراء رتبة **${selectedItem.role.name}** بسعر \`${selectedItem.price}\`.` 
+                        content: `🔔 طلب جديد: <@${interaction.user.id}> اختار رتبة **${selectedItem.role.name}** وسعرها \`${selectedItem.price}\`. ننتظر التحويل...` 
                     }).catch(e => console.log("خطأ في إرسال إشعار التحويل"));
                 }
             }
-        } // نهاية قوس المنيو
+        } // نهاية قوس المنيو - تمام التمام ✅
+
 
     // ================= BUTTONS (الأزرار) =================
     if (interaction.isButton()) {
@@ -642,48 +640,50 @@ client.on('messageCreate', async (message) => {
     if (!shopConfig.transferChannel || message.channel.id !== shopConfig.transferChannel) return;
     if (message.author.id !== "282859044593598464") return; // ID ProBot
 
-    // 2. فحص إذا كانت الرسالة هي رسالة تأكيد تحويل
-    // نص رسالة البروبوت: :moneybag: | {user}, has transferred `${amount}` to {receiver}
-    if (message.content.includes("has transferred") && message.content.includes(`<@${shopConfig.receiver}>`)) {
+    // 2. فحص إذا كانت الرسالة هي رسالة تأكيد تحويل (بيدعم المنشن والأي دي)
+    if (message.content.includes("has transferred") && (message.content.includes(`<@${shopConfig.receiver}>`) || message.content.includes(shopConfig.receiver))) {
         
-        // استخراج المبلغ من الرسالة
+        // استخراج المبلغ واستخراج المرسل (بين علامتي المنشن <@...>)
         const amountMatch = message.content.match(/\$(\d+)/) || message.content.match(/`(\d+)`/);
-        // استخراج الشخص الذي قام بالتحويل (أول منشن في الرسالة)
-        const senderId = message.content.match(/<@!?(\d+)>/)?.[1];
+        const senderMatch = message.content.match(/<@!?(\d+)>/);
 
-        if (amountMatch && senderId) {
+        if (amountMatch && senderMatch) {
             const amountReceived = parseInt(amountMatch[1]);
+            const senderId = senderMatch[1];
 
-            // البحث عن الرتبة التي سعرها يطابق المبلغ المحول
-            // ملاحظة: قمنا بمطابقة السعر الصافي (بدون ضريبة) لأن البروبوت يظهر الصافي في رسالته
-            const purchasedItem = shopConfig.items.find(item => item.price === amountReceived);
+            // 3. البحث في الذاكرة: هل هذا الشخص ضغط على رتبة معينة بالمنيو قبل شوي؟
+            const purchase = pendingPurchases.get(senderId);
 
-            if (purchasedItem) {
+            // التحقق من أن الشخص طلب رتبة وأن المبلغ المحول يطابق سعرها
+            if (purchase && amountReceived >= purchase.price) {
                 try {
                     const member = await message.guild.members.fetch(senderId);
-                    const role = purchasedItem.role;
+                    const role = message.guild.roles.cache.get(purchase.roleId);
 
                     if (member && role) {
                         await member.roles.add(role);
                         
-                        // إرسال تأكيد في الشات
                         const successEmbed = new EmbedBuilder()
-                            .setTitle("✅ تم تفعيل الرتبة تلقائياً")
-                            .setDescription(`شكراً لك <@${senderId}>، تم إعطاؤك رتبة **${role.name}** بنجاح.`)
+                            .setTitle("✅ تم تسليم الرتبة تلقائياً")
+                            .setDescription(`شكراً لك <@${senderId}>، تم إعطاؤك رتبة **${role.name}** بنجاح بناءً على اختيارك.`)
                             .setColor("Green")
                             .setTimestamp();
 
                         await message.channel.send({ embeds: [successEmbed] });
+
+                        // مسح الطلب من الذاكرة بعد النجاح
+                        pendingPurchases.delete(senderId);
                     }
                 } catch (error) {
                     console.error("خطأ في إعطاء الرتبة:", error);
-                    await message.channel.send(`❌ حدث خطأ أثناء محاولة إعطاء الرتبة لـ <@${senderId}>. تأكد من صلاحيات البوت.`);
+                    await message.channel.send(`❌ <@${senderId}>، حولت المبلغ بس البوت واجه مشكلة (تأكد أن رتبة البوت أعلى من الرتب المبيوعة).`);
                 }
+            } else {
+                // إذا الشخص حول مبلغ بس ما كان مختار رتبة من المنيو
+                await message.channel.send(`⚠️ <@${senderId}>، يرجى اختيار الرتبة من المنيو أولاً ثم التحويل لتفعيلها تلقائياً.`);
             }
         }
     }
 });
-
-
 
 client.login(process.env.TOKEN);
