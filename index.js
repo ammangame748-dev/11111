@@ -639,31 +639,35 @@ client.on('ready', async () => {
     }
 });
 client.on('messageCreate', async (message) => {
-    // 1. التأكد أن الرسالة في روم التحويل المحددة ومن البروبوت
+    // 1. التحقق من الروم ومن أنه بوت البروبوت
     if (!shopConfig.transferChannel || message.channel.id !== shopConfig.transferChannel) return;
     if (message.author.id !== "282859044593598464") return; 
 
     const content = message.content;
-    const logChannelId = "1411239985012543538"; // روم اللوجر
+    const logChannelId = "1411239985012543538"; 
 
     // 2. التحقق من لغة الرسالة والكلمات المفتاحية
     const isTransfer = content.includes("قام بتحويل") || content.includes("has transferred");
-    const isToReceiver = content.includes(`<@${shopConfig.receiver}>`) || content.includes(shopConfig.receiver);
+    const isToReceiver = content.includes(shopConfig.receiver);
 
     if (isTransfer && isToReceiver) {
         
-        // تعديل الـ Regex ليقرأ الرقم سواء كان الدولار قبله $2222 أو بعده 2222$
-        const amountMatch = content.match(/(\d+)\$/) || content.match(/\$(\d+)/) || content.match(/`(\d+)`/);
-        const senderMatch = content.match(/<@!?(\d+)>/);
+        // استخراج كل الأرقام الموجودة في الرسالة
+        const numbers = content.match(/\d+/g); 
+        // استخراج كل المنشنات الموجودة في الرسالة
+        const mentions = content.match(/\d{17,19}/g); 
 
-        if (amountMatch && senderMatch) {
-            const amountReceived = parseInt(amountMatch[1]); // نأخذ الرقم فقط من المجموعة الأولى
-            const senderId = senderMatch[1];
+        if (numbers && mentions) {
+            // المبلغ عادة يكون أول رقم يظهر في رسالة البروبوت بعد اسم المستخدم
+            // وفي حالتنا نبحث عن الرقم الذي لا يمثل ID (أي رقم أصغر من 15 خانة)
+            const amountReceived = parseInt(numbers.find(n => n.length < 10));
+            const senderId = mentions[0]; // أول ID في الرسالة هو الشخص اللي حول
+
             const purchase = pendingPurchases.get(senderId);
 
             if (purchase) {
-                // التأكد من وصول المبلغ المطلوب (صافي)
-                if (amountReceived >= (purchase.price - 2)) { // سماحية بسيطة 2 كاش
+                // التحقق من المبلغ مع سماحية بسيطة
+                if (amountReceived >= (purchase.price - 5)) {
                     try {
                         const member = await message.guild.members.fetch(senderId);
                         const role = message.guild.roles.cache.get(purchase.roleId);
@@ -671,37 +675,35 @@ client.on('messageCreate', async (message) => {
                         if (member && role) {
                             await member.roles.add(role);
                             
-                            // رسالة النجاح في الشات
+                            // رد التأكيد
                             await message.reply({ 
-                                content: `✅ كفو <@${senderId}>! تم إعطاؤك رتبة **${role.name}** تلقائياً.` 
+                                content: `✅ كفو <@${senderId}>! تم تفعيل رتبة **${role.name}** تلقائياً.` 
                             });
 
                             // إرسال اللوج
                             const logChannel = client.channels.cache.get(logChannelId);
                             if (logChannel) {
                                 const logEmbed = new EmbedBuilder()
-                                    .setTitle("🛒 مبيعات رتب جديدة")
+                                    .setTitle("🛒 عملية شراء جديدة")
                                     .addFields(
-                                        { name: "👤 المشتري:", value: `${member.user.username}`, inline: true },
+                                        { name: "👤 المشتري:", value: `<@${senderId}>`, inline: true },
                                         { name: "🏷️ الرتبة:", value: `${role.name}`, inline: true },
                                         { name: "💰 المبلغ:", value: `${amountReceived}$`, inline: true }
                                     )
-                                    .setThumbnail(member.user.displayAvatarURL())
-                                    .setColor("Gold")
+                                    .setColor("Green")
                                     .setTimestamp();
-                                
                                 await logChannel.send({ embeds: [logEmbed] });
                             }
-
                             pendingPurchases.delete(senderId);
                         }
                     } catch (error) {
-                        console.error("Error giving role:", error);
-                        message.reply("❌ واجهت مشكلة في إعطاء الرتبة، تأكد أن رتبتي أعلى من الرتب المبيوعة.");
+                        console.error("Error:", error);
+                        message.reply("❌ البوت لديه مشكلة في الصلاحيات، تأكد أن رتبته في القمة.");
                     }
                 }
             }
         }
     }
 });
+
 client.login(process.env.TOKEN);
