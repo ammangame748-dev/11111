@@ -16,6 +16,12 @@ const client = new Client({
 // مخازن مؤقتة للبيانات
 let autoLineBanner = null;
 let roleMenuRoles = [];
+let shopConfig = {
+    shopChannel: null,
+    transferChannel: null,
+    receiver: null,
+    items: []
+};
 let roleMenuMessage = null;
 let lastTicketImage = null, lastTicketEmoji = null;
 let lastRenameImage = null, lastRenameEmoji = null;
@@ -43,21 +49,23 @@ client.on('ready', async () => {
                 { name: 'image', description: 'ارفع صورة الخط', type: 11, required: true }
             ]
         },
-{
-    name: 'role-menu',
-    description: 'إنشاء منيو رتب (8 رتب)',
-    options: [
-        { name: 'role1', type: 8, description: 'الرتبة الأولى', required: true },
-        { name: 'role2', type: 8, description: 'الرتبة الثانية', required: true },
-        { name: 'role3', type: 8, description: 'الرتبة الثالثة', required: true },
-        { name: 'role4', type: 8, description: 'الرتبة الرابعة', required: true },
-        { name: 'role5', type: 8, description: 'الرتبة الخامسة', required: true },
-        { name: 'role6', type: 8, description: 'الرتبة السادسة', required: true },
-        { name: 'role7', type: 8, description: 'الرتبة السابعة', required: true },
-        { name: 'role8', type: 8, description: 'الرتبة الثامنة', required: true },
-        { name: 'title', type: 3, description: 'عنوان الإيمباد', required: false }
-    ]
-},
+
+        {
+            name: 'role-menu',
+            description: 'إنشاء منيو رتب (8 رتب)',
+            options: [
+                { name: 'role1', type: 8, description: 'الرتبة الأولى', required: true },
+                { name: 'role2', type: 8, description: 'الرتبة الثانية', required: true },
+                { name: 'role3', type: 8, description: 'الرتبة الثالثة', required: true },
+                { name: 'role4', type: 8, description: 'الرتبة الرابعة', required: true },
+                { name: 'role5', type: 8, description: 'الرتبة الخامسة', required: true },
+                { name: 'role6', type: 8, description: 'الرتبة السادسة', required: true },
+                { name: 'role7', type: 8, description: 'الرتبة السابعة', required: true },
+                { name: 'role8', type: 8, description: 'الرتبة الثامنة', required: true },
+                { name: 'title', type: 3, description: 'عنوان الإيمباد', required: false }
+            ]
+        },
+
         {
             name: 'setup-ticket',
             description: 'إعداد بانل التذاكر (منيو)',
@@ -92,6 +100,66 @@ client.on('ready', async () => {
                 { name: 'user', description: 'العضو المراد إعطاؤه وقت', type: 6, required: true },
                 { name: 'duration', description: 'المدة بالدقائق', type: 4, required: true }
             ]
+        },
+
+        {
+            name: 'shop-setup',
+            description: 'إعداد متجر الرتب (15 رتبة)',
+            options: [
+                { name: 'shop_channel', type: 7, description: 'روم المتجر', required: true },
+                { name: 'transfer_channel', type: 7, description: 'روم التحويل/الطلبات', required: true },
+                { name: 'receiver', type: 6, description: 'الشخص المستلم للكريديت', required: true },
+
+                { name: 'role1', type: 8, required: true },
+                { name: 'price1', type: 4, required: true },
+
+                { name: 'role2', type: 8, required: true },
+                { name: 'price2', type: 4, required: true },
+
+                { name: 'role3', type: 8, required: true },
+                { name: 'price3', type: 4, required: true },
+
+                { name: 'role4', type: 8, required: true },
+                { name: 'price4', type: 4, required: true },
+
+                { name: 'role5', type: 8, required: true },
+                { name: 'price5', type: 4, required: true },
+
+                { name: 'role6', type: 8, required: true },
+                { name: 'price6', type: 4, required: true },
+
+                { name: 'role7', type: 8, required: true },
+                { name: 'price7', type: 4, required: true },
+
+                { name: 'role8', type: 8, required: true },
+                { name: 'price8', type: 4, required: true },
+
+                { name: 'role9', type: 8, required: true },
+                { name: 'price9', type: 4, required: true },
+
+                { name: 'role10', type: 8, required: true },
+                { name: 'price10', type: 4, required: true },
+
+                { name: 'role11', type: 8, required: true },
+                { name: 'price11', type: 4, required: true },
+
+                { name: 'role12', type: 8, required: true },
+                { name: 'price12', type: 4, required: true },
+
+                { name: 'role13', type: 8, required: true },
+                { name: 'price13', type: 4, required: true },
+
+                { name: 'role14', type: 8, required: true },
+                { name: 'price14', type: 4, required: true },
+
+                { name: 'role15', type: 8, required: true },
+                { name: 'price15', type: 4, required: true }
+            ]
+        },
+
+        {
+            name: 'shop',
+            description: 'نشر متجر الرتب'
         }
 
     ];
@@ -355,29 +423,74 @@ if (interaction.customId === 'role_menu_select') {
         ephemeral: true
     });
 }
-        if (interaction.customId === 'rename_select') {
-            const modal = new ModalBuilder().setCustomId('actual_name_change').setTitle('تغيير الاسم');
-            modal.addComponents(new ActionRowBuilder().addComponents(
-                new TextInputBuilder().setCustomId('new_name').setLabel("اكتب اسمك الجديد").setStyle(TextInputStyle.Short)
-            ));
-            await interaction.showModal(modal);
-        }
+      if (interaction.customId === 'rename_select') {
+    const modal = new ModalBuilder().setCustomId('actual_name_change').setTitle('تغيير الاسم');
+    modal.addComponents(
+        new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+                .setCustomId('new_name')
+                .setLabel("اكتب اسمك الجديد")
+                .setStyle(TextInputStyle.Short)
+        )
+    );
+    await interaction.showModal(modal);
+}
 
-        if (interaction.customId === 'ticket_actions') {
-            const act = interaction.values[0];
-            const modal = new ModalBuilder().setCustomId(`modal_${act}`).setTitle('إجراء التذكرة');
-            modal.addComponents(new ActionRowBuilder().addComponents(
-                new TextInputBuilder().setCustomId(act === 'rename_t' ? 'new_ch_name' : 'user_id').setLabel(act === 'rename_t' ? "الاسم الجديد" : "ID العضو").setStyle(TextInputStyle.Short)
-            ));
-            await interaction.showModal(modal);
-        }
+if (interaction.customId === 'ticket_actions') {
+    const act = interaction.values[0];
+
+    const modal = new ModalBuilder()
+        .setCustomId(`modal_${act}`)
+        .setTitle('إجراء التذكرة');
+
+    modal.addComponents(
+        new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+                .setCustomId(act === 'rename_t' ? 'new_ch_name' : 'user_id')
+                .setLabel(act === 'rename_t' ? "الاسم الجديد" : "ID العضو")
+                .setStyle(TextInputStyle.Short)
+        )
+    );
+
+    await interaction.showModal(modal);
+}
+
+}
+
+if (interaction.isButton()) {
+    if (interaction.customId === 'claim_t')
+        await interaction.reply(`✅ تم الاستلام بواسطة: ${interaction.user}`);
+
+    if (interaction.customId === 'close_t') {
+        await interaction.reply("جاري الحذف...");
+        setTimeout(() => interaction.channel.delete().catch(() => {}), 3000);
     }
 
-    if (interaction.isButton()) {
-        if (interaction.customId === 'claim_t') await interaction.reply(`✅ تم الاستلام بواسطة: ${interaction.user}`);
-        if (interaction.customId === 'close_t') { await interaction.reply("جاري الحذف..."); setTimeout(() => interaction.channel.delete().catch(() => {}), 3000); }
-        if (interaction.customId === 'call_owner') await interaction.reply(`🔔 ننتظر حضور صاحب التذكرة!`);
+    if (interaction.customId === 'call_owner')
+        await interaction.reply(`🔔 ننتظر حضور صاحب التذكرة!`);
+}
+
+
+// لازم يكون داخل isChatInputCommand
+if (interaction.isChatInputCommand()) {
+
+    if (interaction.commandName === 'shop-setup') {
+
+        shopConfig.shopChannel = interaction.options.getChannel('shop_channel').id;
+        shopConfig.transferChannel = interaction.options.getChannel('transfer_channel').id;
+        shopConfig.receiver = interaction.options.getUser('receiver').id;
+
+        shopConfig.items = [];
+
+        for (let i = 1; i <= 15; i++) {
+            shopConfig.items.push({
+                role: interaction.options.getRole(`role${i}`),
+                price: interaction.options.getInteger(`price${i}`)
+            });
+        }
+
+        await interaction.reply({ content: "تم إعداد المتجر بنجاح", ephemeral: true });
     }
-});
+}});
 
 client.login(process.env.TOKEN);
