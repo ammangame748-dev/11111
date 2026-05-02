@@ -537,5 +537,17 @@ client.on('interactionCreate', async (interaction) => {
             await interaction.reply(`🔔 ننتظر حضور صاحب التذكرة!`);
     }
 });
+client.on('ready', async () => {
+    console.log(`✅ ${client.user.tag} متصل وجاهز!`);
+
+    try {
+        // هذا السطر هو المسؤول عن إرسال الأوامر لديسكورد وتحديثها فوراً
+        await client.application.commands.set(commands);
+        console.log('✅ تم تحديث أوامر السلاش بنجاح!');
+    } catch (error) {
+        console.error('❌ فشل تحديث الأوامر:', error);
+    }
+});
+
 
 client.login(process.env.TOKEN);
