@@ -110,10 +110,15 @@ app.listen(port, () => {
                 { name: 'role11', type: 8, description: 'الرتبة 11', required: true }, { name: 'price11', type: 4, description: 'سعر 11', required: true }
             ]
         },
-        {
+                {
             name: 'shop',
-            description: 'نشر متجر الرتب'
+            description: 'نشر متجر الرتب مع إيمباد مخصص',
+            options: [
+                { name: 'description', type: 3, description: 'وصف المتجر (الكلام اللي رح ينكتب)', required: true },
+                { name: 'image', type: 11, description: 'ارفع صورة البنر للمتجر', required: false }
+            ]
         }
+
     ];
 
 // منع الكراش
@@ -319,35 +324,41 @@ client.on('interactionCreate', async (interaction) => {
         }
 
     }
-        if (interaction.commandName === 'shop') {
+          if (interaction.commandName === 'shop') {
             if (!shopConfig.shopChannel || shopConfig.items.length === 0) {
                 return interaction.reply({ content: "⚠️ يجب إعداد المتجر أولاً باستخدام `/shop-setup`", ephemeral: true });
             }
 
+            // جلب البيانات المخصصة من الأمر
+            const userDescription = interaction.options.getString('description');
+            const userImage = interaction.options.getAttachment('image');
+
             const shopEmbed = new EmbedBuilder()
                 .setTitle("🛒 متجر الرتب")
-                .setDescription("اختر الرتبة التي تريد شراءها من القائمة أدناه:")
+                .setDescription(userDescription) // الوصف اللي كتبته بالأمر
                 .setColor("Gold");
+
+            // إذا رفعت صورة، البوت رح يحطها بالإيمباد
+            if (userImage) shopEmbed.setImage(userImage.url);
 
             const menu = new StringSelectMenuBuilder()
                 .setCustomId('buy_role_menu')
                 .setPlaceholder('اختر رتبة للشراء')
                 .addOptions(
-                    shopConfig.items
-                        .filter(item => item.role && item.price) // التأكد أن الرتبة موجودة
-                        .map((item, index) => ({
-                            label: item.role.name,
-                            description: `السعر: ${item.price}`,
-                            value: `${index}`
-                        }))
+                    shopConfig.items.map((item, index) => ({
+                        label: item.role.name,
+                        description: `السعر: ${item.price}`,
+                        value: `${index}`
+                    }))
                 );
 
             const row = new ActionRowBuilder().addComponents(menu);
-
             const channel = interaction.guild.channels.cache.get(shopConfig.shopChannel);
+            
             await channel.send({ embeds: [shopEmbed], components: [row] });
-            await interaction.reply({ content: "✅ تم نشر المتجر في القناة المخصصة.", ephemeral: true });
+            await interaction.reply({ content: "✅ تم نشر المتجر المخصص بنجاح!", ephemeral: true });
         }
+
 
     // ================= MODALS =================
     if (interaction.type === InteractionType.ModalSubmit) {
