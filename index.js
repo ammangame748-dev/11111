@@ -15,6 +15,7 @@ const client = new Client({
 
 // مخازن مؤقتة للبيانات
 let autoLineBanner = null;
+let pendingPurchases = new Map(); // لحفظ مين اختار شو
 let roleMenuRoles = [];
 let shopConfig = {
     shopChannel: null,
@@ -564,49 +565,63 @@ if (interaction.customId === 'role_menu_select') {
             await interaction.showModal(modal);
         }
     }
-        if (interaction.customId === 'buy_role_menu') {
-            const itemIndex = parseInt(interaction.values[0]);
-            const selectedItem = shopConfig.items[itemIndex];
+        // ================= SELECT MENUS (المنيو) =================
+        if (interaction.isStringSelectMenu()) {
 
-            if (!selectedItem) {
-                return interaction.reply({ content: "❌ لم يتم العثور على الرتبة، يرجى إعادة المحاولة.", ephemeral: true });
-            }
+            if (interaction.customId === 'buy_role_menu') {
+                const itemIndex = parseInt(interaction.values[0]);
+                const selectedItem = shopConfig.items[itemIndex];
 
-            const price = selectedItem.price;
-            const receiverId = shopConfig.receiver;
-            // حساب السعر مع ضريبة ProBot (الضرب في 20 والقسمة على 19)
-            const taxPrice = Math.floor(price * (20 / 19) + 1);
+                if (!selectedItem) {
+                    return interaction.reply({ content: "❌ لم يتم العثور على الرتبة.", ephemeral: true });
+                }
 
-            const buyEmbed = new EmbedBuilder()
-                .setTitle("💳 طلب شراء رتبة")
-                .setDescription(`لقد اخترت شراء رتبة: ${selectedItem.role}\n\n**السعر المطلوبة:** \`${price}\`\n**الأمر للنسخ:**\n\`c ${receiverId} ${taxPrice}\``)
-                .setColor("Blue")
-                .setFooter({ text: "قم بالتحويل في روم الطلبات لإتمام العملية" });
-
-            await interaction.reply({ embeds: [buyEmbed], ephemeral: true });
-
-            // إرسال رسالة في روم التحويل عشان الإدارة تنتبه
-            const transferChannel = interaction.guild.channels.cache.get(shopConfig.transferChannel);
-            if (transferChannel) {
-                transferChannel.send({ 
-                    content: `🔔 طلب جديد: <@${interaction.user.id}> يريد شراء ${selectedItem.role} بسعر \`${price}\`.` 
+                // 1. حفظ الطلب في الذاكرة (عشان نعرف أي رتبة بدو لما يحول)
+                pendingPurchases.set(interaction.user.id, {
+                    roleId: selectedItem.role.id,
+                    price: selectedItem.price
                 });
-            }
-        }
 
-    // ================= BUTTONS =================
+               // ... داخل كود المنيو ...
+
+const receiverId = shopConfig.receiver; // الآيدي الخاص بالمستلم
+const taxPrice = Math.floor(selectedItem.price * (20 / 19) + 1);
+
+const buyEmbed = new EmbedBuilder()
+    .setTitle("💳 طلب شراء رتبة")
+    .setDescription(`لقد اخترت: ${selectedItem.role}\nالسعر: \`${selectedItem.price}\`\n\n**أمر التحويل (اضغط للنسخ):**\n\`#credit <@${receiverId}> ${taxPrice}\``) 
+    .setColor("Blue")
+    .setFooter({ text: "سيتم إعطاؤك الرتبة تلقائياً فور التحويل" });
+
+
+                await interaction.reply({ embeds: [buyEmbed], ephemeral: true });
+
+                // 2. إرسال رسالة لروم التحويل (داخل قوس المنيو عشان يشتغل صح)
+                const transferChannel = interaction.guild.channels.cache.get(shopConfig.transferChannel);
+                if (transferChannel) {
+                    transferChannel.send({ 
+                        content: `🔔 طلب جديد: <@${interaction.user.id}> يريد شراء رتبة **${selectedItem.role.name}** بسعر \`${selectedItem.price}\`.` 
+                    }).catch(e => console.log("خطأ في إرسال إشعار التحويل"));
+                }
+            }
+        } // نهاية قوس المنيو
+
+    // ================= BUTTONS (الأزرار) =================
     if (interaction.isButton()) {
 
-        if (interaction.customId === 'claim_t')
+        if (interaction.customId === 'claim_t') {
             await interaction.reply(`✅ تم الاستلام بواسطة: ${interaction.user}`);
+        }
 
         if (interaction.customId === 'close_t') {
-            await interaction.reply("جاري الحذف...");
+            await interaction.reply("جاري إغلاق التذكرة وحذفها خلال 3 ثوانٍ...");
             setTimeout(() => interaction.channel.delete().catch(() => {}), 3000);
         }
 
-        if (interaction.customId === 'call_owner')
-            await interaction.reply(`🔔 ننتظر حضور صاحب التذكرة!`);
+        if (interaction.customId === 'call_owner') {
+            // ملاحظة: تأكد أنك تخزن من فتح التذكرة إذا أردت عمل منشن فعلي
+            await interaction.reply(`🔔 تم طلب حضور صاحب التذكرة!`);
+        }
     }
 });
 client.on('ready', async () => {
@@ -620,6 +635,55 @@ client.on('ready', async () => {
         console.error('❌ فشل تحديث الأوامر:', error);
     }
 });
+// --- نظام التحقق التلقائي من الكريديت وإعطاء الرتبة ---
+
+client.on('messageCreate', async (message) => {
+    // 1. التأكد أن الرسالة في روم التحويل المحددة وأنها من بوت البروبوت
+    if (!shopConfig.transferChannel || message.channel.id !== shopConfig.transferChannel) return;
+    if (message.author.id !== "282859044593598464") return; // ID ProBot
+
+    // 2. فحص إذا كانت الرسالة هي رسالة تأكيد تحويل
+    // نص رسالة البروبوت: :moneybag: | {user}, has transferred `${amount}` to {receiver}
+    if (message.content.includes("has transferred") && message.content.includes(`<@${shopConfig.receiver}>`)) {
+        
+        // استخراج المبلغ من الرسالة
+        const amountMatch = message.content.match(/\$(\d+)/) || message.content.match(/`(\d+)`/);
+        // استخراج الشخص الذي قام بالتحويل (أول منشن في الرسالة)
+        const senderId = message.content.match(/<@!?(\d+)>/)?.[1];
+
+        if (amountMatch && senderId) {
+            const amountReceived = parseInt(amountMatch[1]);
+
+            // البحث عن الرتبة التي سعرها يطابق المبلغ المحول
+            // ملاحظة: قمنا بمطابقة السعر الصافي (بدون ضريبة) لأن البروبوت يظهر الصافي في رسالته
+            const purchasedItem = shopConfig.items.find(item => item.price === amountReceived);
+
+            if (purchasedItem) {
+                try {
+                    const member = await message.guild.members.fetch(senderId);
+                    const role = purchasedItem.role;
+
+                    if (member && role) {
+                        await member.roles.add(role);
+                        
+                        // إرسال تأكيد في الشات
+                        const successEmbed = new EmbedBuilder()
+                            .setTitle("✅ تم تفعيل الرتبة تلقائياً")
+                            .setDescription(`شكراً لك <@${senderId}>، تم إعطاؤك رتبة **${role.name}** بنجاح.`)
+                            .setColor("Green")
+                            .setTimestamp();
+
+                        await message.channel.send({ embeds: [successEmbed] });
+                    }
+                } catch (error) {
+                    console.error("خطأ في إعطاء الرتبة:", error);
+                    await message.channel.send(`❌ حدث خطأ أثناء محاولة إعطاء الرتبة لـ <@${senderId}>. تأكد من صلاحيات البوت.`);
+                }
+            }
+        }
+    }
+});
+
 
 
 client.login(process.env.TOKEN);
