@@ -638,57 +638,77 @@ client.on('ready', async () => {
         console.error('❌ فشل تحديث الأوامر:', error);
     }
 });
-// --- نظام التحقق التلقائي من الكريديت وإعطاء الرتبة ---
-
 client.on('messageCreate', async (message) => {
-    // 1. التأكد أن الرسالة في روم التحويل المحددة وأنها من بوت البروبوت
+    // 1. التأكد أن الرسالة في روم التحويل المحددة ومن البروبوت
     if (!shopConfig.transferChannel || message.channel.id !== shopConfig.transferChannel) return;
-    if (message.author.id !== "282859044593598464") return; // ID ProBot
+    if (message.author.id !== "282859044593598464") return; 
 
-    // 2. فحص إذا كانت الرسالة هي رسالة تأكيد تحويل (بيدعم المنشن والأي دي)
-    if (message.content.includes("has transferred") && (message.content.includes(`<@${shopConfig.receiver}>`) || message.content.includes(shopConfig.receiver))) {
+    const content = message.content;
+    const logChannelId = "1411239985012543538"; // روم اللوجر الخاص بك
+
+    // 2. فحص لغة الرسالة (عربي أو إنجليزي)
+    const isTransfer = content.includes("قام بتحويل") || content.includes("has transferred");
+    const isToReceiver = content.includes(`<@${shopConfig.receiver}>`) || content.includes(shopConfig.receiver);
+
+    if (isTransfer && isToReceiver) {
         
-        // استخراج المبلغ واستخراج المرسل (بين علامتي المنشن <@...>)
-        const amountMatch = message.content.match(/\$(\d+)/) || message.content.match(/`(\d+)`/);
-        const senderMatch = message.content.match(/<@!?(\d+)>/);
+        // استخراج المبلغ واستخراج المشتري
+        const amountMatch = content.match(/(\d+)\$/) || content.match(/\$(\d+)/) || content.match(/`(\d+)`/);
+        const senderMatch = content.match(/<@!?(\d+)>/);
 
         if (amountMatch && senderMatch) {
             const amountReceived = parseInt(amountMatch[1]);
             const senderId = senderMatch[1];
-
-            // 3. البحث في الذاكرة: هل هذا الشخص ضغط على رتبة معينة بالمنيو قبل شوي؟
             const purchase = pendingPurchases.get(senderId);
 
-            // التحقق من أن الشخص طلب رتبة وأن المبلغ المحول يطابق سعرها
-            if (purchase && amountReceived >= purchase.price) {
-                try {
-                    const member = await message.guild.members.fetch(senderId);
-                    const role = message.guild.roles.cache.get(purchase.roleId);
+            if (purchase) {
+                if (amountReceived >= purchase.price) {
+                    try {
+                        const member = await message.guild.members.fetch(senderId);
+                        const role = message.guild.roles.cache.get(purchase.roleId);
 
-                    if (member && role) {
-                        await member.roles.add(role);
-                        
-                        const successEmbed = new EmbedBuilder()
-                            .setTitle("✅ تم تسليم الرتبة تلقائياً")
-                            .setDescription(`شكراً لك <@${senderId}>، تم إعطاؤك رتبة **${role.name}** بنجاح بناءً على اختيارك.`)
-                            .setColor("Green")
-                            .setTimestamp();
+                        if (member && role) {
+                            // إعطاء الرتبة
+                            await member.roles.add(role);
+                            
+                            // 1. رسالة النجاح في روم التحويل
+                            const successEmbed = new EmbedBuilder()
+                                .setTitle("✅ عملية شراء ناجحة")
+                                .setDescription(`شكراً <@${senderId}>، تم تفعيل رتبة **${role.name}** تلقائياً.`)
+                                .setColor("Green")
+                                .setTimestamp();
+                            await message.reply({ embeds: [successEmbed] });
 
-                        await message.channel.send({ embeds: [successEmbed] });
+                            // 2. إرسال اللوج إلى روم اللوجر
+                            const logChannel = client.channels.cache.get(logChannelId);
+                            if (logChannel) {
+                                const logEmbed = new EmbedBuilder()
+                                    .setTitle("📝 سجل مبيعات المتجر")
+                                    .addFields(
+                                        { name: "👤 المشتري:", value: `${member.user.tag} (${senderId})`, inline: true },
+                                        { name: "🏷️ الرتبة:", value: `${role.name}`, inline: true },
+                                        { name: "💰 المبلغ المستلم:", value: `${amountReceived}$`, inline: true }
+                                    )
+                                    .setThumbnail(member.user.displayAvatarURL())
+                                    .setColor("Blue")
+                                    .setFooter({ text: "نظام المتجر التلقائي" })
+                                    .setTimestamp();
+                                
+                                await logChannel.send({ embeds: [logEmbed] });
+                            }
 
-                        // مسح الطلب من الذاكرة بعد النجاح
-                        pendingPurchases.delete(senderId);
+                            // مسح الطلب من الذاكرة
+                            pendingPurchases.delete(senderId);
+                        }
+                    } catch (error) {
+                        console.error("Log Error:", error);
+                        message.reply(`❌ حدث خطأ أثناء محاولة إعطاء الرتبة لـ <@${senderId}>.`);
                     }
-                } catch (error) {
-                    console.error("خطأ في إعطاء الرتبة:", error);
-                    await message.channel.send(`❌ <@${senderId}>، حولت المبلغ بس البوت واجه مشكلة (تأكد أن رتبة البوت أعلى من الرتب المبيوعة).`);
                 }
-            } else {
-                // إذا الشخص حول مبلغ بس ما كان مختار رتبة من المنيو
-                await message.channel.send(`⚠️ <@${senderId}>، يرجى اختيار الرتبة من المنيو أولاً ثم التحويل لتفعيلها تلقائياً.`);
             }
         }
     }
 });
+
 
 client.login(process.env.TOKEN);
