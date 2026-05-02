@@ -319,6 +319,35 @@ client.on('interactionCreate', async (interaction) => {
         }
 
     }
+        if (interaction.commandName === 'shop') {
+            if (!shopConfig.shopChannel || shopConfig.items.length === 0) {
+                return interaction.reply({ content: "⚠️ يجب إعداد المتجر أولاً باستخدام `/shop-setup`", ephemeral: true });
+            }
+
+            const shopEmbed = new EmbedBuilder()
+                .setTitle("🛒 متجر الرتب")
+                .setDescription("اختر الرتبة التي تريد شراءها من القائمة أدناه:")
+                .setColor("Gold");
+
+            const menu = new StringSelectMenuBuilder()
+                .setCustomId('buy_role_menu')
+                .setPlaceholder('اختر رتبة للشراء')
+                .addOptions(
+                    shopConfig.items
+                        .filter(item => item.role && item.price) // التأكد أن الرتبة موجودة
+                        .map((item, index) => ({
+                            label: item.role.name,
+                            description: `السعر: ${item.price}`,
+                            value: `${index}`
+                        }))
+                );
+
+            const row = new ActionRowBuilder().addComponents(menu);
+
+            const channel = interaction.guild.channels.cache.get(shopConfig.shopChannel);
+            await channel.send({ embeds: [shopEmbed], components: [row] });
+            await interaction.reply({ content: "✅ تم نشر المتجر في القناة المخصصة.", ephemeral: true });
+        }
 
     // ================= MODALS =================
     if (interaction.type === InteractionType.ModalSubmit) {
