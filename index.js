@@ -249,98 +249,166 @@ client.on('messageCreate', async (message) => {
 });
 
 client.on('interactionCreate', async (interaction) => {
+
+    // ================= CHAT INPUT COMMANDS =================
     if (interaction.isChatInputCommand()) {
+
         if (interaction.commandName === 'set-line') {
             autoLineBanner = interaction.options.getAttachment('image').url;
             await interaction.reply({ content: "✅ تم حفظ البنر بنجاح!", ephemeral: true });
         }
-if (interaction.commandName === 'role-menu') {
 
-    roleMenuRoles = [
-    interaction.options.getRole('role1'),
-    interaction.options.getRole('role2'),
-    interaction.options.getRole('role3'),
-    interaction.options.getRole('role4'),
-    interaction.options.getRole('role5'),
-    interaction.options.getRole('role6'),
-    interaction.options.getRole('role7'),
-    interaction.options.getRole('role8'),
-];
+        if (interaction.commandName === 'role-menu') {
 
-    const title = interaction.options.getString('title') || 'Role Menu';
+            roleMenuRoles = [
+                interaction.options.getRole('role1'),
+                interaction.options.getRole('role2'),
+                interaction.options.getRole('role3'),
+                interaction.options.getRole('role4'),
+                interaction.options.getRole('role5'),
+                interaction.options.getRole('role6'),
+                interaction.options.getRole('role7'),
+                interaction.options.getRole('role8'),
+            ];
 
-    const menu = new StringSelectMenuBuilder()
-    .setCustomId('role_menu_select')
-    .setPlaceholder('اختر رتبتك')
-    .addOptions(
-        roleMenuRoles.map(role => ({
-            label: role.name,   // 👈 اسم الرتبة الحقيقي
-            value: role.id
-        }))
-    );
+            const title = interaction.options.getString('title') || 'Role Menu';
 
-    const row = new ActionRowBuilder().addComponents(menu);
+            const menu = new StringSelectMenuBuilder()
+                .setCustomId('role_menu_select')
+                .setPlaceholder('اختر رتبتك')
+                .addOptions(
+                    roleMenuRoles.map(role => ({
+                        label: role.name,
+                        value: role.id
+                    }))
+                );
 
-    const embed = new EmbedBuilder()
-        .setTitle(title)
-        .setDescription('اختر الرتبة من القائمة')
-        .setColor('Blue');
+            const row = new ActionRowBuilder().addComponents(menu);
 
-    await interaction.reply({
-        embeds: [embed],
-        components: [row]
-    });
-}
+            const embed = new EmbedBuilder()
+                .setTitle(title)
+                .setDescription('اختر الرتبة من القائمة')
+                .setColor('Blue');
+
+            await interaction.reply({
+                embeds: [embed],
+                components: [row]
+            });
+        }
+
         if (interaction.commandName === 'setup-ticket') {
             lastTicketImage = interaction.options.getAttachment('image').url;
             lastTicketEmoji = interaction.options.getString('emoji_id');
-            const modal = new ModalBuilder().setCustomId('t_setup').setTitle('إعداد التذكرة');
-            modal.addComponents(new ActionRowBuilder().addComponents(
-                new TextInputBuilder().setCustomId('t_msg').setLabel("محتوى الإيمباد").setStyle(TextInputStyle.Paragraph)
-            ));
+
+            const modal = new ModalBuilder()
+                .setCustomId('t_setup')
+                .setTitle('إعداد التذكرة');
+
+            modal.addComponents(
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                        .setCustomId('t_msg')
+                        .setLabel("محتوى الإيمباد")
+                        .setStyle(TextInputStyle.Paragraph)
+                )
+            );
+
             await interaction.showModal(modal);
         }
 
         if (interaction.commandName === 'setup-rename') {
             lastRenameImage = interaction.options.getAttachment('image').url;
             lastRenameEmoji = interaction.options.getString('emoji');
-            const modal = new ModalBuilder().setCustomId('r_setup').setTitle('إعداد قائمة الأسماء');
-            modal.addComponents(new ActionRowBuilder().addComponents(
-                new TextInputBuilder().setCustomId('r_msg').setLabel("وصف القائمة").setStyle(TextInputStyle.Paragraph)
-            ));
+
+            const modal = new ModalBuilder()
+                .setCustomId('r_setup')
+                .setTitle('إعداد قائمة الأسماء');
+
+            modal.addComponents(
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                        .setCustomId('r_msg')
+                        .setLabel("وصف القائمة")
+                        .setStyle(TextInputStyle.Paragraph)
+                )
+            );
+
             await interaction.showModal(modal);
         }
 
         if (interaction.commandName === 'ban' || interaction.commandName === 'timeout') {
             const user = interaction.options.getMember('user');
+
             try {
-                if (interaction.commandName === 'ban') { await user.ban(); await interaction.reply(`✅ طردنا ${user.user.tag}`); }
-                else { await user.timeout(interaction.options.getInteger('duration') * 60000); await interaction.reply("✅ تم التايم آوت"); }
-            } catch (e) { await interaction.reply({ content: "❌ رتبته أعلى مني!", ephemeral: true }); }
+                if (interaction.commandName === 'ban') {
+                    await user.ban();
+                    await interaction.reply(`✅ طردنا ${user.user.tag}`);
+                } else {
+                    await user.timeout(interaction.options.getInteger('duration') * 60000);
+                    await interaction.reply("✅ تم التايم آوت");
+                }
+            } catch (e) {
+                await interaction.reply({ content: "❌ رتبته أعلى مني!", ephemeral: true });
+            }
+        }
+
+        if (interaction.commandName === 'shop-setup') {
+
+            shopConfig.shopChannel = interaction.options.getChannel('shop_channel').id;
+            shopConfig.transferChannel = interaction.options.getChannel('transfer_channel').id;
+            shopConfig.receiver = interaction.options.getUser('receiver').id;
+
+            shopConfig.items = [];
+
+            for (let i = 1; i <= 15; i++) {
+                shopConfig.items.push({
+                    role: interaction.options.getRole(`role${i}`),
+                    price: interaction.options.getInteger(`price${i}`)
+                });
+            }
+
+            await interaction.reply({ content: "تم إعداد المتجر بنجاح", ephemeral: true });
         }
     }
+
+    // ================= MODALS =================
     if (interaction.type === InteractionType.ModalSubmit) {
+
         if (interaction.customId === 't_setup') {
-            const embed = new EmbedBuilder().setDescription(interaction.fields.getTextInputValue('t_msg')).setColor("Blue");
+            const embed = new EmbedBuilder()
+                .setDescription(interaction.fields.getTextInputValue('t_msg'))
+                .setColor("Blue");
+
             if (lastTicketImage) embed.setImage(lastTicketImage);
+
             const row = new ActionRowBuilder().addComponents(
                 new StringSelectMenuBuilder()
                     .setCustomId('open_t_menu')
                     .setPlaceholder('اضغط هنا لفتح تذكرة')
-                    .addOptions([{ label: 'فتح تذكرة جديدة', value: 'create_ticket', emoji: lastTicketEmoji }])
+                    .addOptions([
+                        { label: 'فتح تذكرة جديدة', value: 'create_ticket', emoji: lastTicketEmoji }
+                    ])
             );
+
             await interaction.channel.send({ embeds: [embed], components: [row] });
             await interaction.reply({ content: "✅ تم النشر", ephemeral: true });
         }
 
         if (interaction.customId === 'r_setup') {
-            const embed = new EmbedBuilder().setDescription(interaction.fields.getTextInputValue('r_msg')).setImage(lastRenameImage).setColor("Purple");
+            const embed = new EmbedBuilder()
+                .setDescription(interaction.fields.getTextInputValue('r_msg'))
+                .setImage(lastRenameImage)
+                .setColor("Purple");
+
             const row = new ActionRowBuilder().addComponents(
                 new StringSelectMenuBuilder()
                     .setCustomId('rename_select')
                     .setPlaceholder('اختر لتغيير اسمك')
-                    .addOptions([{ label: 'تغيير الاسم المستعار', value: 'go', emoji: lastRenameEmoji }])
+                    .addOptions([
+                        { label: 'تغيير الاسم المستعار', value: 'go', emoji: lastRenameEmoji }
+                    ])
             );
+
             await interaction.channel.send({ embeds: [embed], components: [row] });
             await interaction.reply({ content: "✅ تم النشر", ephemeral: true });
         }
@@ -350,18 +418,22 @@ if (interaction.commandName === 'role-menu') {
             try {
                 await interaction.member.setNickname(name);
                 await interaction.reply({ content: `✅ صار اسمك: ${name}`, ephemeral: true });
-            } catch (e) { await interaction.reply({ content: "❌ لا أستطيع تغيير اسمك!", ephemeral: true }); }
+            } catch {
+                await interaction.reply({ content: "❌ لا أستطيع تغيير اسمك!", ephemeral: true });
+            }
         }
 
         if (interaction.customId === 'modal_rename_ch') {
             await interaction.channel.setName(interaction.fields.getTextInputValue('new_ch_name'));
             await interaction.reply({ content: `✅ تم تغيير اسم التذكرة`, ephemeral: true });
         }
+
         if (interaction.customId === 'modal_add_user') {
             const id = interaction.fields.getTextInputValue('user_id');
             await interaction.channel.permissionOverwrites.create(id, { ViewChannel: true, SendMessages: true });
             await interaction.reply({ content: `✅ تم إضافة <@${id}> للتذكرة.` });
         }
+
         if (interaction.customId === 'modal_remove_user') {
             const id = interaction.fields.getTextInputValue('user_id');
             await interaction.channel.permissionOverwrites.delete(id);
@@ -369,18 +441,26 @@ if (interaction.commandName === 'role-menu') {
         }
     }
 
+    // ================= SELECT MENUS =================
     if (interaction.isStringSelectMenu()) {
+
         if (interaction.customId === 'open_t_menu') {
-            const ch = await interaction.guild.channels.create({ 
+
+            const ch = await interaction.guild.channels.create({
                 name: `ticket-${interaction.user.username}`,
                 permissionOverwrites: [
                     { id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
                     { id: interaction.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
                 ],
             });
+
             await interaction.reply({ content: `تذكرتك: ${ch}`, ephemeral: true });
 
-            const eb = new EmbedBuilder().setTitle("🎫 تذكرة جديدة").setDescription(`مرحباً ${interaction.user}`).setColor("Green");
+            const eb = new EmbedBuilder()
+                .setTitle("🎫 تذكرة جديدة")
+                .setDescription(`مرحباً ${interaction.user}`)
+                .setColor("Green");
+
             if (lastTicketImage) eb.setImage(lastTicketImage);
 
             const r1 = new ActionRowBuilder().addComponents(
@@ -390,107 +470,94 @@ if (interaction.commandName === 'role-menu') {
             );
 
             const r2 = new ActionRowBuilder().addComponents(
-                new StringSelectMenuBuilder().setCustomId('ticket_actions').setPlaceholder('خيارات التذكرة').addOptions([
-                    { label: 'إضافة شخص', value: 'add_user', emoji: '➕' },
-                    { label: 'إزالة شخص', value: 'remove_user', emoji: '➖' },
-                    { label: 'تغيير اسم', value: 'rename_t', emoji: '📝' }
-                ])
+                new StringSelectMenuBuilder()
+                    .setCustomId('ticket_actions')
+                    .setPlaceholder('خيارات التذكرة')
+                    .addOptions([
+                        { label: 'إضافة شخص', value: 'add_user', emoji: '➕' },
+                        { label: 'إزالة شخص', value: 'remove_user', emoji: '➖' },
+                        { label: 'تغيير اسم', value: 'rename_t', emoji: '📝' }
+                    ])
             );
+
             await ch.send({ embeds: [eb], components: [r1, r2] });
         }
-if (interaction.customId === 'role_menu_select') {
 
-    const member = interaction.member;
-    const newRoleId = interaction.values[0];
+        if (interaction.customId === 'role_menu_select') {
 
-    // نحول كل الرتب إلى IDs بشكل مضمون
-    const roleIds = roleMenuRoles.map(r => r.id);
+            const member = interaction.member;
+            const newRoleId = interaction.values[0];
 
-    // نشيل أي رتبة موجودة من رتب المنيو
-    const rolesToRemove = member.roles.cache.filter(role =>
-        roleIds.includes(role.id)
-    );
+            const roleIds = roleMenuRoles.map(r => r.id);
 
-    if (rolesToRemove.size > 0) {
-        await member.roles.remove(rolesToRemove);
-    }
+            const rolesToRemove = member.roles.cache.filter(role =>
+                roleIds.includes(role.id)
+            );
 
-    // نضيف الرتبة الجديدة
-    await member.roles.add(newRoleId);
+            if (rolesToRemove.size > 0) {
+                await member.roles.remove(rolesToRemove);
+            }
 
-    await interaction.reply({
-        content: 'تم تحديث رتبتك بنجاح',
-        ephemeral: true
-    });
-}
-      if (interaction.customId === 'rename_select') {
-    const modal = new ModalBuilder().setCustomId('actual_name_change').setTitle('تغيير الاسم');
-    modal.addComponents(
-        new ActionRowBuilder().addComponents(
-            new TextInputBuilder()
-                .setCustomId('new_name')
-                .setLabel("اكتب اسمك الجديد")
-                .setStyle(TextInputStyle.Short)
-        )
-    );
-    await interaction.showModal(modal);
-}
+            await member.roles.add(newRoleId);
 
-if (interaction.customId === 'ticket_actions') {
-    const act = interaction.values[0];
-
-    const modal = new ModalBuilder()
-        .setCustomId(`modal_${act}`)
-        .setTitle('إجراء التذكرة');
-
-    modal.addComponents(
-        new ActionRowBuilder().addComponents(
-            new TextInputBuilder()
-                .setCustomId(act === 'rename_t' ? 'new_ch_name' : 'user_id')
-                .setLabel(act === 'rename_t' ? "الاسم الجديد" : "ID العضو")
-                .setStyle(TextInputStyle.Short)
-        )
-    );
-
-    await interaction.showModal(modal);
-}
-
-}
-
-if (interaction.isButton()) {
-    if (interaction.customId === 'claim_t')
-        await interaction.reply(`✅ تم الاستلام بواسطة: ${interaction.user}`);
-
-    if (interaction.customId === 'close_t') {
-        await interaction.reply("جاري الحذف...");
-        setTimeout(() => interaction.channel.delete().catch(() => {}), 3000);
-    }
-
-    if (interaction.customId === 'call_owner')
-        await interaction.reply(`🔔 ننتظر حضور صاحب التذكرة!`);
-}
-
-
-// لازم يكون داخل isChatInputCommand
-if (interaction.isChatInputCommand()) {
-
-    if (interaction.commandName === 'shop-setup') {
-
-        shopConfig.shopChannel = interaction.options.getChannel('shop_channel').id;
-        shopConfig.transferChannel = interaction.options.getChannel('transfer_channel').id;
-        shopConfig.receiver = interaction.options.getUser('receiver').id;
-
-        shopConfig.items = [];
-
-        for (let i = 1; i <= 15; i++) {
-            shopConfig.items.push({
-                role: interaction.options.getRole(`role${i}`),
-                price: interaction.options.getInteger(`price${i}`)
+            await interaction.reply({
+                content: 'تم تحديث رتبتك بنجاح',
+                ephemeral: true
             });
         }
 
-        await interaction.reply({ content: "تم إعداد المتجر بنجاح", ephemeral: true });
+        if (interaction.customId === 'rename_select') {
+            const modal = new ModalBuilder()
+                .setCustomId('actual_name_change')
+                .setTitle('تغيير الاسم');
+
+            modal.addComponents(
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                        .setCustomId('new_name')
+                        .setLabel("اكتب اسمك الجديد")
+                        .setStyle(TextInputStyle.Short)
+                )
+            );
+
+            await interaction.showModal(modal);
+        }
+
+        if (interaction.customId === 'ticket_actions') {
+
+            const act = interaction.values[0];
+
+            const modal = new ModalBuilder()
+                .setCustomId(`modal_${act}`)
+                .setTitle('إجراء التذكرة');
+
+            modal.addComponents(
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                        .setCustomId(act === 'rename_t' ? 'new_ch_name' : 'user_id')
+                        .setLabel(act === 'rename_t' ? "الاسم الجديد" : "ID العضو")
+                        .setStyle(TextInputStyle.Short)
+                )
+            );
+
+            await interaction.showModal(modal);
+        }
     }
-}});
+
+    // ================= BUTTONS =================
+    if (interaction.isButton()) {
+
+        if (interaction.customId === 'claim_t')
+            await interaction.reply(`✅ تم الاستلام بواسطة: ${interaction.user}`);
+
+        if (interaction.customId === 'close_t') {
+            await interaction.reply("جاري الحذف...");
+            setTimeout(() => interaction.channel.delete().catch(() => {}), 3000);
+        }
+
+        if (interaction.customId === 'call_owner')
+            await interaction.reply(`🔔 ننتظر حضور صاحب التذكرة!`);
+    }
+});
 
 client.login(process.env.TOKEN);
