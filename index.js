@@ -500,32 +500,31 @@ client.on('interactionCreate', async (interaction) => {
         }
 
 if (interaction.customId === 'role_menu_select') {
+    // 1. نخبر ديسكورد إن البوت استلم الطلب وعم يعالج البيانات
+    await interaction.deferReply({ ephemeral: true });
+
     const member = interaction.member;
     const selectedRoleId = interaction.values[0];
 
     try {
-        // كل رتب المنيو
         const menuRoleIds = roleMenuRoles.map(r => r.id);
-
-        // حذف كل رتب المنيو من العضو
         await member.roles.remove(menuRoleIds);
-
-        // إضافة الرتبة المختارة فقط
         await member.roles.add(selectedRoleId);
 
-        await interaction.reply({
-            content: "✅ تم تحديث رتبتك بنجاح (تم حذف الرتب السابقة وإضافة الجديدة)",
-            ephemeral: true
+        // 2. نعدل الرد الأول بنتيجة النجاح
+        await interaction.editReply({
+            content: "✅ تم تحديث رتبتك بنجاح!"
         });
 
     } catch (error) {
         console.error(error);
-        await interaction.reply({
-            content: "❌ صار خطأ، تأكد أن رتبة البوت أعلى من الرتب.",
-            ephemeral: true
+        // 3. نعدل الرد الأول في حال الخطأ بدل إرسال رد جديد
+        await interaction.editReply({
+            content: "❌ فشلت العملية: تأكد أن رتبة البوت أعلى من الرتب المختارة."
         });
     }
 }
+
 
 
         if (interaction.customId === 'rename_select') {
