@@ -1,139 +1,86 @@
-const {
-    Client,
-    GatewayIntentBits,
-    SlashCommandBuilder,
-    REST,
-    Routes,
-    EmbedBuilder
-} = require('discord.js');
+const express = require('express');
+const app = express();
+const port = process.env.PORT || 3000;
 
-require('dotenv').config();
+app.get('/', (req, res) => {
+    res.send(`
+    <!DOCTYPE html>
+    <html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Blacklist | الموقع الرسمي</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            
+            body {
+                background: radial-gradient(circle at center, #1a3a5f 0%, #0a192f 100%);
+                color: white;
+                font-family: 'Segoe UI', sans-serif;
+                height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                overflow: hidden;
+            }
 
-const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildMembers
-    ]
+            .container {
+                text-align: center;
+                animation: fadeIn 2s ease-in-out;
+            }
+
+            h1 {
+                font-size: 5rem;
+                letter-spacing: 5px;
+                text-transform: uppercase;
+                background: linear-gradient(to right, #64ffda, #00d2ff);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                margin-bottom: 10px;
+                filter: drop-shadow(0 0 10px rgba(100, 255, 218, 0.3));
+            }
+
+            p {
+                font-size: 1.2rem;
+                color: #8892b0;
+                letter-spacing: 2px;
+            }
+
+            .glass-card {
+                background: rgba(255, 255, 255, 0.05);
+                backdrop-filter: blur(10px);
+                padding: 40px 60px;
+                border-radius: 20px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            .footer {
+                position: absolute;
+                bottom: 20px;
+                font-size: 0.8rem;
+                color: #495670;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="glass-card">
+                <h1>BLACKLIST</h1>
+                <p>COMING SOON | قريباً</p>
+            </div>
+        </div>
+        <div class="footer">© 2024 Blacklist Brand. All rights reserved.</div>
+    </body>
+    </html>
+    `);
 });
 
-// ====== تخزين الطلبات ======
-const pendingPurchases = new Map();
-
-// ====== أمر /shop ======
-const commands = [
-    new SlashCommandBuilder()
-        .setName('shop')
-        .setDescription('شراء رتبة')
-        .addUserOption(option =>
-            option.setName('receiver')
-                .setDescription('الشخص الذي سيتم التحويل له')
-                .setRequired(true))
-        .addRoleOption(option =>
-            option.setName('role')
-                .setDescription('الرتبة')
-                .setRequired(true))
-        .addIntegerOption(option =>
-            option.setName('price')
-                .setDescription('السعر')
-                .setRequired(true))
-].map(cmd => cmd.toJSON());
-
-// ====== تسجيل الأوامر ======
-client.on('ready', async () => {
-    console.log(`✅ ${client.user.tag} شغال!`);
-
-    const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
-
-    await rest.put(
-        Routes.applicationCommands(client.user.id),
-        { body: commands }
-    );
-
-    console.log('✅ تم تسجيل أمر /shop');
+app.listen(port, () => {
+    console.log(`Blacklist site is live on port ${port}`);
 });
-
-// ====== تنفيذ /shop ======
-client.on('interactionCreate', async (interaction) => {
-
-    if (!interaction.isChatInputCommand()) return;
-
-    if (interaction.commandName === 'shop') {
-
-        const receiver = interaction.options.getUser('receiver');
-        const role = interaction.options.getRole('role');
-        const price = interaction.options.getInteger('price');
-
-        // تخزين الطلب
-        pendingPurchases.set(interaction.user.id, {
-            roleId: role.id,
-            price: price,
-            receiverId: receiver.id
-        });
-
-        await interaction.reply({
-            content:
-                `💸 لتحصل على رتبة **${role.name}**\n` +
-                `حوّل ${price}$ إلى <@${receiver.id}>`,
-            ephemeral: true
-        });
-    }
-});
-
-
-// ====== نظام كشف التحويل ======
-client.on('messageCreate', async (message) => {
-
-    if (message.author.id !== "282859044593598464") return; // بروبوت فقط
-
-    const content = message.content;
-
-    const isTransfer =
-        content.includes("قام بتحويل") ||
-        content.includes("has transferred");
-
-    if (!isTransfer) return;
-
-    const numbers = content.match(/\d+/g);
-    const mentions = content.match(/\d{17,19}/g);
-
-    if (!numbers || !mentions) return;
-
-    const amount = parseInt(numbers.find(n => n.length < 10));
-    if (!amount) return;
-
-    // نحدد المشتري
-    const buyerId = mentions.find(id => pendingPurchases.has(id));
-    if (!buyerId) return;
-
-    const purchase = pendingPurchases.get(buyerId);
-
-    // تحقق من الشخص المستلم (من السلاش)
-    if (!mentions.includes(purchase.receiverId)) return;
-
-    // تحقق من السعر
-    if (amount < purchase.price * 0.95) return;
-
-    try {
-        const member = await message.guild.members.fetch(buyerId);
-        const role = message.guild.roles.cache.get(purchase.roleId);
-
-        if (!member || !role) return;
-
-        // ===== يعطي الرتبة فوراً =====
-        await member.roles.add(role);
-
-        await message.reply(
-            `✅ <@${buyerId}> تم إعطاؤك رتبة **${role.name}**`
-        );
-
-        pendingPurchases.delete(buyerId);
-
-    } catch (err) {
-        console.error(err);
-        message.reply("❌ تأكد أن رتبة البوت أعلى من الرتبة");
-    }
-});
-
-client.login(process.env.TOKEN);
