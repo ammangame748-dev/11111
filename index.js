@@ -16,10 +16,10 @@ app.get('/', (req, res) => {
             * { margin: 0; padding: 0; box-sizing: border-box; }
             
             body {
-                /* خلفية متدرجة بألوان الصورة (أزرق عميق وأزرق سماوي) */
-                background: linear-gradient(135deg, #001f3f 0%, #0074D9 50%, #7FDBFF 100%);
+                /* استخدمت هنا درجات الأزرق العميق من صورتك بالضبط */
+                background: linear-gradient(135deg, #001d4a 0%, #00458b 50%, #002d62 100%);
                 background-size: 400% 400%;
-                animation: windFlow 15s ease infinite; /* حركة انسيابية مثل الهوا */
+                animation: deepSeaBreeze 15s ease-in-out infinite; /* حركة هواء عميقة وبطيئة */
                 color: white;
                 font-family: 'Cairo', sans-serif;
                 height: 100vh;
@@ -29,102 +29,95 @@ app.get('/', (req, res) => {
                 overflow: hidden;
             }
 
-            /* تأثير الغيوم أو الضباب المتحرك */
-            body::before {
+            /* طبقة ضبابية متحركة لتعطي شعور حركة الهواء */
+            body::after {
                 content: "";
                 position: absolute;
                 width: 200%;
                 height: 200%;
-                background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-                animation: clouds 20s linear infinite;
+                background: radial-gradient(circle at center, rgba(0, 116, 217, 0.1) 0%, transparent 60%);
+                animation: windMove 10s linear infinite alternate;
                 z-index: 1;
             }
 
             .container {
                 position: relative;
-                z-index: 2;
+                z-index: 5;
                 text-align: center;
             }
 
             .glass-card {
-                background: rgba(255, 255, 255, 0.1);
-                backdrop-filter: blur(10px);
+                background: rgba(0, 30, 70, 0.4);
+                backdrop-filter: blur(15px);
+                -webkit-backdrop-filter: blur(15px);
                 padding: 60px 80px;
-                border-radius: 20px;
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                box-shadow: 0 8px 32px 0 rgba(0, 0, 50, 0.3);
+                border-radius: 10px;
+                border: 1px solid rgba(0, 116, 217, 0.3);
+                box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
                 transition: 0.5s;
-            }
-
-            .glass-card:hover {
-                transform: translateY(-10px);
-                border-color: rgba(255, 255, 255, 0.5);
-                box-shadow: 0 15px 45px rgba(0, 116, 217, 0.4);
             }
 
             h1 {
                 font-size: clamp(3rem, 10vw, 6rem);
                 font-weight: 900;
-                letter-spacing: 10px;
+                letter-spacing: 15px;
                 text-transform: uppercase;
-                /* تأثير نص زجاجي/سماوي */
-                background: linear-gradient(to bottom, #fff 0%, #7FDBFF 100%);
+                background: linear-gradient(to bottom, #ffffff 30%, #38b6ff 100%);
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
                 margin-bottom: 20px;
-                filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
+                filter: drop-shadow(0 0 15px rgba(0, 116, 217, 0.5));
             }
 
             .coming-soon {
                 font-size: 1.5rem;
-                color: #fff;
+                color: #38b6ff;
                 letter-spacing: 8px;
                 font-weight: 400;
-                opacity: 0.9;
+                opacity: 0.8;
             }
 
             .coming-soon::after {
                 content: "";
                 display: block;
-                width: 50px;
+                width: 60px;
                 height: 2px;
-                background: #7FDBFF;
+                background: #38b6ff;
                 margin: 15px auto;
-                animation: expand 3s infinite ease-in-out;
+                animation: expand 2.5s infinite;
             }
 
-            /* أنيميشن حركة الهوا في الخلفية */
-            @keyframes windFlow {
+            /* أنيميشن الخلفية */
+            @keyframes deepSeaBreeze {
                 0% { background-position: 0% 50%; }
                 50% { background-position: 100% 50%; }
                 100% { background-position: 0% 50%; }
             }
 
-            @keyframes clouds {
-                from { transform: translate(-10%, -10%) rotate(0deg); }
-                to { transform: translate(10%, 10%) rotate(360deg); }
+            @keyframes windMove {
+                from { transform: translate(-10%, -10%); }
+                to { transform: translate(10%, 10%); }
             }
 
             @keyframes expand {
-                0%, 100% { width: 40px; opacity: 0.5; }
-                50% { width: 200px; opacity: 1; }
+                0%, 100% { width: 40px; opacity: 0.4; }
+                50% { width: 180px; opacity: 1; }
             }
 
             .particles {
                 position: absolute;
                 top: 0; left: 0; width: 100%; height: 100%;
                 pointer-events: none;
-                z-index: 1;
+                z-index: 2;
             }
 
             .footer {
                 position: absolute;
                 bottom: 30px;
-                font-size: 0.8rem;
-                color: rgba(255, 255, 255, 0.5);
-                letter-spacing: 2px;
-                text-transform: uppercase;
-                z-index: 2;
+                font-size: 0.7rem;
+                color: rgba(255, 255, 255, 0.3);
+                letter-spacing: 4px;
+                z-index: 5;
             }
         </style>
     </head>
@@ -136,30 +129,28 @@ app.get('/', (req, res) => {
                 <div class="coming-soon">COMING SOON</div>
             </div>
         </div>
-        <div class="footer">FRESH BREEZE • THE SKY IS THE LIMIT</div>
+        <div class="footer">EMBRACE THE VOID • THE BLUE HORIZON</div>
 
         <script>
-            // ذرات خفيفة مثل "نسمات الهواء" أو "بلورات ثلجية"
+            // جزيئات زرقاء صغيرة "كأنها غبار في الريح"
             const particlesContainer = document.getElementById('particles');
             for (let i = 0; i < 40; i++) {
                 const dot = document.createElement('div');
                 dot.style.position = 'absolute';
-                dot.style.width = Math.random() * 3 + 'px';
-                dot.style.height = dot.style.width;
-                dot.style.background = 'rgba(255, 255, 255, 0.6)';
+                dot.style.width = '2px';
+                dot.style.height = '2px';
+                dot.style.background = '#38b6ff';
                 dot.style.top = Math.random() * 100 + 'vh';
                 dot.style.left = Math.random() * 100 + 'vw';
+                dot.style.opacity = Math.random();
                 dot.style.borderRadius = '50%';
-                dot.style.filter = 'blur(1px)';
-                
                 dot.animate([
-                    { transform: 'translateX(0) translateY(0)', opacity: 0 },
-                    { transform: 'translateX(' + (Math.random() * 200 - 100) + 'px) translateY(-150px)', opacity: 0.8 },
-                    { transform: 'translateX(' + (Math.random() * 400 - 200) + 'px) translateY(-300px)', opacity: 0 }
+                    { transform: 'translate(0, 0)', opacity: 0 },
+                    { transform: 'translate(50px, -100px)', opacity: 0.7 },
+                    { transform: 'translate(100px, -200px)', opacity: 0 }
                 ], {
-                    duration: Math.random() * 5000 + 4000,
-                    iterations: Infinity,
-                    easing: 'linear'
+                    duration: Math.random() * 4000 + 3000,
+                    iterations: Infinity
                 });
                 particlesContainer.appendChild(dot);
             }
