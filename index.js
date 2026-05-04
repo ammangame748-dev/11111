@@ -54,5 +54,14 @@ client.on('messageCreate', async (message) => {
         }
     }
 });
+const http = require('http');
+
+// كود بسيط لفتح بورت وهمي عشان Render ما يطفي البوت
+http.createServer((req, res) => {
+    res.write("Bot is running!");
+    res.end();
+}).listen(8080);
+
+
 
 client.login(process.env.TOKEN);
