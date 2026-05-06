@@ -8,6 +8,32 @@
     --glass: rgba(255, 255, 255, 0.03);
 }
 
+/* 🖼️ إضافة الخلفية المتحركة GIF */
+.animated-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('/bg-video.GIF') no-repeat center center fixed;
+    background-size: cover;
+    z-index: -2;
+    filter: brightness(0.4);
+    /* تعتيم عشان البطاقات تبرز */
+}
+
+/* طبقة تعتيم إضافية */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: -1;
+}
+
 body {
     background: var(--dark-bg);
     color: white;
@@ -17,7 +43,7 @@ body {
     overflow-x: hidden;
 }
 
-/* الهيدر الاحترافي */
+/* --- الهيدر الاحترافي --- */
 .main-header {
     display: flex;
     justify-content: space-between;
@@ -49,7 +75,7 @@ body {
     filter: drop-shadow(0 0 8px var(--neon-blue));
 }
 
-/* زر إضافة قناة - نيون أزرق */
+/* --- زر إضافة قناة --- */
 .plus-btn {
     background: transparent;
     color: var(--neon-blue);
@@ -69,7 +95,7 @@ body {
     box-shadow: 0 0 25px var(--neon-blue);
 }
 
-/* توزيع البطاقات */
+/* --- توزيع البطاقات --- */
 .cards-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -77,9 +103,10 @@ body {
     padding: 50px 5%;
 }
 
-/* البطاقة الذكية */
+/* --- البطاقة الذكية --- */
 .card {
     background: var(--glass);
+    backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 25px;
     padding: 40px 20px;
@@ -87,20 +114,23 @@ body {
     position: relative;
     transition: 0.5s;
     overflow: hidden;
+    z-index: 1;
 }
 
-/* تأثير البرق الأزرق عند الـ Hover */
 .card:hover {
     transform: translateY(-15px);
     border-color: var(--neon-blue);
     box-shadow: 0 15px 40px rgba(0, 210, 255, 0.2);
 }
 
+/* تأثير خط النيون الدوار */
 .card::before {
     content: '';
     position: absolute;
-    top: -50%; left: -50%;
-    width: 200%; height: 200%;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
     background: conic-gradient(transparent, transparent, transparent, var(--neon-blue));
     animation: rotate 4s linear infinite;
     z-index: -1;
@@ -108,22 +138,26 @@ body {
     transition: 0.5s;
 }
 
-.card:hover::before { opacity: 1; }
-
-@keyframes rotate {
-    100% { transform: rotate(360deg); }
+.card:hover::before {
+    opacity: 1;
 }
 
-/* صورة الستريمر */
+@keyframes rotate {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* --- صورة الستريمر --- */
 .avatar-container {
     width: 110px;
     height: 110px;
     margin: 0 auto 20px;
-    position: relative;
 }
 
 .profile-img {
-    width: 100%; height: 100%;
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
     border: 4px solid #1a1d23;
     object-fit: cover;
@@ -135,10 +169,12 @@ body {
     transform: scale(1.1);
 }
 
-/* شارة LIVE */
+/* --- شارة LIVE --- */
 .status-badge {
     position: absolute;
-    top: 20px; right: 20px;
+    top: 20px;
+    left: 20px;
+    /* خليها عاليسار عشان التصميم العربي */
     background: var(--deep-blue);
     padding: 5px 15px;
     border-radius: 50px;
@@ -149,12 +185,23 @@ body {
 }
 
 @keyframes pulse {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.8; }
-    100% { transform: scale(1); opacity: 1; }
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
-/* زر المشاهدة */
+/* --- زر المشاهدة --- */
 .watch-link {
     display: block;
     margin-top: 20px;

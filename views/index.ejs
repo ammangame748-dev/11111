@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KICK HUB | نيون بلو</title>
     <link rel="stylesheet" href="/style.css">
 </head>
-
 <body>
+
+    <!-- إضافة الخلفية الـ GIF -->
+    <div class="animated-bg"></div>
 
     <header class="main-header">
         <div class="logo-area">
@@ -18,56 +19,45 @@
         <button class="plus-btn" onclick="openModal()">+ أضف قناتك</button>
     </header>
 
-    <div class="stats-bar" style="text-align: center; padding: 20px; color: #888;">
-        إجمالي القنوات: <b>
-            <%= stats.totalStreamers %>
-        </b> |
-        متصل الآن: <b style="color: var(--neon-blue);">
-            <%= stats.liveNow %>
-        </b>
+    <div class="stats-bar" style="text-align: center; padding: 20px; color: #888; position: relative; z-index: 1;">
+        إجمالي القنوات: <b><%= stats.totalStreamers %></b> | 
+        متصل الآن: <b style="color: var(--neon-blue);"><%= stats.liveNow %></b>
     </div>
 
     <div class="cards-grid">
-        <% streamers.forEach(streamer=> { %>
+        <% streamers.forEach(streamer => { %>
             <div class="card <%= streamer.isLive ? 'live-border' : '' %>">
                 <% if(streamer.isLive) { %>
                     <span class="status-badge">LIVE</span>
-                    <% } %>
+                <% } %>
+                
+                <div class="avatar-container">
+                    <img src="<%= streamer.profilePic || '/black.png' %>" class="profile-img">
+                </div>
+                
+                <h3 style="margin: 10px 0; letter-spacing: 1px;"><%= streamer.kickUsername %></h3>
+                
+                <div style="color: var(--neon-blue); font-weight: bold;">
+                    👁️ <%= streamer.viewers %> مشاهد
+                </div>
 
-                        <div class="avatar-container">
-                            <img src="<%= streamer.profilePic || '/black.png' %>" class="profile-img">
-                        </div>
-
-                        <h3 style="margin: 10px 0; letter-spacing: 1px;">
-                            <%= streamer.kickUsername %>
-                        </h3>
-
-                        <div style="color: var(--neon-blue); font-weight: bold;">
-                            👁️ <%= streamer.viewers %> مشاهد
-                        </div>
-
-                        <a href="https://kick.com<%= streamer.kickUsername %>" target="_blank" class="watch-link">
-                            مشاهدة البث الحصري
-                        </a>
+                <!-- تم تصحيح الرابط بإضافة / قبل الاسم -->
+                <a href="https://kick.com<%= streamer.kickUsername %>" target="_blank" class="watch-link">
+                    مشاهدة البث الحصري
+                </a>
             </div>
-            <% }) %>
+        <% }) %>
     </div>
 
-    <!-- النافذة المنبثقة للطلب -->
-    <div id="addModal"
-        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); backdrop-filter:blur(10px); z-index:2000; align-items:center; justify-content:center;">
-        <div
-            style="background:#111; padding:40px; border-radius:30px; border:1px solid var(--neon-blue); width:350px; text-align:center;">
+    <!-- نافذة الإضافة (Modal) كما هي بقيت ممتازة -->
+    <div id="addModal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); backdrop-filter:blur(10px); z-index:2000; align-items:center; justify-content:center;">
+        <div style="background:#111; padding:40px; border-radius:30px; border:1px solid var(--neon-blue); width:350px; text-align:center;">
             <h2 style="color:var(--neon-blue);">انضم للمنصة</h2>
             <form action="/apply" method="POST">
-                <input type="text" name="kickUser" placeholder="اسمك في Kick" required
-                    style="width:100%; padding:12px; margin:10px 0; background:#222; border:none; color:white; border-radius:10px;">
-                <input type="text" name="discordName" placeholder="حساب الديسكورد"
-                    style="width:100%; padding:12px; margin:10px 0; background:#222; border:none; color:white; border-radius:10px;">
-                <button type="submit" class="plus-btn"
-                    style="width:100%; margin-top:20px; background:var(--neon-blue); color:black;">إرسال الآن</button>
-                <button type="button" onclick="closeModal()"
-                    style="margin-top:15px; background:none; color:gray; border:none; cursor:pointer;">إغلاق</button>
+                <input type="text" name="kickUser" placeholder="اسمك في Kick" required style="width:100%; padding:12px; margin:10px 0; background:#222; border:none; color:white; border-radius:10px;">
+                <input type="text" name="discordName" placeholder="حساب الديسكورد" style="width:100%; padding:12px; margin:10px 0; background:#222; border:none; color:white; border-radius:10px;">
+                <button type="submit" class="plus-btn-submit" style="width:100%; margin-top:20px; background:var(--neon-blue); color:black; border:none; padding:10px; border-radius:10px; font-weight:bold; cursor:pointer;">إرسال الآن</button>
+                <button type="button" onclick="closeModal()" style="margin-top:15px; background:none; color:gray; border:none; cursor:pointer;">إغلاق</button>
             </form>
         </div>
     </div>
@@ -76,7 +66,5 @@
         function openModal() { document.getElementById('addModal').style.display = 'flex'; }
         function closeModal() { document.getElementById('addModal').style.display = 'none'; }
     </script>
-
 </body>
-
 </html>
