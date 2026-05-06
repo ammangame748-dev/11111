@@ -1,34 +1,44 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
-const port = process.env.PORT || 3000; // مهم جداً عشان Render
 const fs = require('fs');
 
 const app = express();
-app.use(bodyParser.json());
-app.use(express.static('public')); // عشان يشوف الصور والـ CSS
+const port = process.env.PORT || 3000; // Render بيستخدم هاد المتغير
 
-// مصفوفة لتخزين الطلبات (في الحقيقة بنستخدم قاعدة بيانات أو ملف JSON)
+app.use(bodyParser.json());
+// تأكد إن ملف index.html موجود داخل مجلد public
+app.use(express.static(path.join(__dirname, 'public'))); 
+
+// مصفوفة لتخزين الطلبات
 let pendingChannels = [];
 let approvedChannels = [
     { name: "TREKA23", viewers: "118", status: "live", title: "بث تجريبي" }
 ];
 
-// 1. استقبال طلب إضافة قناة
+// --- المسارات (Routes) ---
+
+// 1. عرض الصفحة الرئيسية (حل مشكلة Cannot GET /)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// 2. استقبال طلب إضافة قناة
 app.post('/add-channel', (req, res) => {
     const channelName = req.body.name;
     pendingChannels.push({ name: channelName, status: 'pending' });
     res.json({ message: "تم إرسال طلبك للآدمن!" });
 });
 
-// 2. جلب القنوات المعتمدة للموقع
+// 3. جلب القنوات المعتمدة للموقع
 app.get('/get-channels', (req, res) => {
     res.json(approvedChannels);
 });
 
-// 3. جلب الطلبات لصفحة الآدمن
+// 4. جلب الطلبات لصفحة الآدمن
 app.get('/admin/requests', (req, res) => {
     res.json(pendingChannels);
 });
 
-app.listen(3000, () => console.log('سيرفرك شغال على http://localhost:3000'));
+// تشغيل السيرفر باستخدام المتغير port
+app.listen(port, () => console.log(`سيرفرك شغال على منفذ ${port}`));
