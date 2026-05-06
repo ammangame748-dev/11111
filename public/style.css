@@ -2,8 +2,18 @@
 
 :root {
     --neon-blue: #00d2ff;
-    --deep-blue: #0072ff;
-    --dark-bg: #030508;
+    --dark-blue: #0051ff;
+    --bg-deep: #020408;
+    --card-bg: #0a0c10;
+}
+
+body {
+    background: var(--bg-deep);
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    direction: rtl;
+    overflow-x: hidden;
 }
 
 /* 🖼️ الخلفية المتحركة */
@@ -17,153 +27,167 @@
     filter: brightness(0.2);
 }
 
-body {
-    background: var(--dark-bg);
-    color: white;
-    font-family: 'Poppins', sans-serif;
-    margin: 0;
-    direction: rtl;
-}
-
-/* --- الهيدر --- */
+/* 🔝 الهيدر العلوي */
 .main-header {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
     padding: 15px 5%;
     background: rgba(0, 0, 0, 0.8);
-    border-bottom: 1px solid rgba(0, 210, 255, 0.1);
+    border-bottom: 2px solid var(--dark-blue);
 }
 
-.plus-btn {
-    background: transparent;
-    color: var(--neon-blue);
-    border: 1px solid var(--neon-blue);
-    padding: 6px 20px;
-    border-radius: 8px;
-    font-weight: 600;
+.header-logo { height: 50px; }
+
+/* 📊 مربعات الإحصائيات (متحركة) */
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    padding: 20px 5%;
+}
+
+.stat-box {
+    background: var(--card-bg);
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid var(--dark-blue);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 210, 255, 0.1), transparent);
+    animation: sweep 3s infinite;
+}
+
+@keyframes sweep { 100% { left: 100%; } }
+
+/* 🔍 منيو الفلترة */
+.filter-menu {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    padding: 10px;
+    background: rgba(255,255,255,0.05);
+}
+
+.filter-menu button {
+    background: none;
+    border: 1px solid var(--dark-blue);
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
     cursor: pointer;
-    font-size: 13px;
     transition: 0.3s;
 }
 
-.plus-btn:hover {
-    background: var(--neon-blue);
-    color: black;
-}
+.filter-menu button:hover { background: var(--dark-blue); }
 
-/* --- الحاوية: عرضين بجانب بعض أو واحد تحت واحد حسب الشاشة --- */
+/* 🃏 البطاقات العريضة (نحيفة وكبيرة) */
 .cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-    gap: 15px;
-    padding: 30px 5%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px 10%;
 }
 
-/* --- البطاقة "النحيفة" (Slim Design) --- */
 .card {
     display: flex;
     flex-direction: row-reverse;
     justify-content: space-between;
     align-items: center;
-    background: #0a0c10;
-    border-radius: 12px;
-    padding: 12px 25px;
-    height: 100px; /* طول ثابت صغير ومو كبير */
+    background: var(--card-bg);
+    border-radius: 15px;
+    padding: 15px 40px;
+    height: 100px; /* طول نحيف وحجم عرضي كبير */
     position: relative;
-    border: 1px solid rgba(0, 210, 255, 0.2);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-    transition: 0.3s ease;
+    border: 1.5px solid transparent;
+    background-clip: padding-box;
+    transition: 0.4s;
 }
 
-.card:hover {
-    border-color: var(--neon-blue);
-    transform: translateY(-3px);
+/* ✨ حواف زرقاء متحركة (بسرعة عادية) */
+.card::after {
+    content: '';
+    position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    background: linear-gradient(90deg, var(--dark-blue), var(--neon-blue), var(--dark-blue));
+    background-size: 200% 200%;
+    z-index: -1;
+    border-radius: 16px;
+    animation: moveGradient 4s linear infinite;
 }
 
-/* --- محتوى اليسار --- */
-.card-content {
-    text-align: right;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+@keyframes moveGradient {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
 }
 
-.kick-label {
-    background: rgba(0, 210, 255, 0.1);
+.card:hover { transform: scale(1.02); }
+
+/* 🌟 النجمة */
+.star-icon {
+    position: absolute;
+    top: 10px; right: 10px;
     color: var(--neon-blue);
-    border: 1px solid var(--neon-blue);
-    display: inline-block;
-    padding: 1px 6px;
-    border-radius: 4px;
-    font-size: 9px;
-    width: fit-content;
-    margin-bottom: 4px;
-}
-
-.card-content h3 {
     font-size: 18px;
-    margin: 0;
-    color: white;
-    font-weight: 600;
-}
-
-.live-status {
-    color: #ff4b4b;
-    font-size: 11px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    margin: 3px 0;
-}
-
-.dot {
-    width: 7px;
-    height: 7px;
-    background: #ff4b4b;
-    border-radius: 50%;
-    animation: blink 1s infinite;
-}
-
-/* --- زر المشاهدة الصغير --- */
-.watch-btn {
-    background: linear-gradient(90deg, var(--deep-blue), var(--neon-blue));
-    color: white;
-    padding: 5px 18px;
-    border-radius: 6px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 12px;
-    width: fit-content;
-    margin-top: 5px;
-}
-
-/* --- الصورة والعداد (اليمين) --- */
-.profile-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
 }
 
 .profile-img {
-    width: 75px; /* صغرتها جداً لتناسب النحافة */
-    height: 75px;
+    width: 80px; height: 80px;
     border-radius: 50%;
     border: 2px solid var(--neon-blue);
-    object-fit: cover;
 }
 
-.viewers-tag {
-    background: rgba(0, 0, 0, 0.8);
-    color: #999;
-    padding: 1px 8px;
+.watch-btn {
+    background: linear-gradient(90deg, var(--dark-blue), var(--neon-blue));
+    color: white;
+    padding: 8px 25px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* 📱 مودال الحسابات */
+.social-modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9);
+    z-index: 3000;
+    align-items: center; justify-content: center;
+}
+
+.social-content {
+    background: #111;
+    padding: 30px;
+    border-radius: 20px;
+    border: 2px solid var(--neon-blue);
+    width: 400px;
+    text-align: center;
+}
+
+.social-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.social-box {
+    background: #222;
+    padding: 15px;
     border-radius: 10px;
-    font-size: 9px;
-    margin-top: 5px;
-    border: 1px solid #222;
+    border: 1px solid var(--dark-blue);
+    color: white;
+    text-decoration: none;
+    transition: 0.3s;
 }
 
-.viewers-tag b { color: #fff; }
-
-@keyframes blink { 50% { opacity: 0.3; } }
+.social-box:hover { border-color: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); }
