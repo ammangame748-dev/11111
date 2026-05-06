@@ -1,99 +1,174 @@
-/* الألوان والأساسيات */
+@import url('https://googleapis.com');
+
+:root {
+    --neon-blue: #00d2ff;
+    --deep-blue: #0072ff;
+    --kick-green: #53fc18;
+    --dark-bg: #030508;
+    --glass: rgba(255, 255, 255, 0.03);
+}
+
 body {
-    background: #0b0e11;
+    background: var(--dark-bg);
     color: white;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Poppins', sans-serif;
     margin: 0;
-    direction: rtl; /* ليدعم اللغة العربية بشكل صحيح */
+    direction: rtl;
+    overflow-x: hidden;
 }
 
-/* حاوية البطاقات */
-.cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 25px;
-    padding: 30px;
+/* الهيدر الاحترافي */
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 5%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0, 210, 255, 0.2);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
-/* تصميم البطاقة الأساسي */
-.card {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
-    padding: 25px;
-    text-align: center;
-    transition: all 0.4s ease;
-    position: relative;
-    overflow: hidden;
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-/* تأثير عند تمرير الماوس */
-.card:hover {
-    transform: translateY(-10px);
-    border-color: #00e701; /* لون كيك الأخضر */
-    box-shadow: 0 10px 30px rgba(0, 231, 1, 0.2);
+.kick-text {
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--kick-green);
+    letter-spacing: 1px;
 }
 
-/* صورة الستريمر الدائرية */
-.profile-img {
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    border: 3px solid #333;
-    margin-bottom: 15px;
-    object-fit: cover;
+.header-logo {
+    height: 45px;
+    filter: drop-shadow(0 0 8px var(--neon-blue));
 }
 
-/* إذا كان لايف نغير لون الإطار */
-.live-border .profile-img {
-    border-color: #00e701;
-    box-shadow: 0 0 15px rgba(0, 231, 1, 0.5);
-}
-
-/* شارة الـ LIVE */
-.status-badge {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    background: #ff4b4b;
-    color: white;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: bold;
-    animation: blink 1.5s infinite;
-}
-
-@keyframes blink {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
-}
-
-/* زر "أضف قناتك" */
+/* زر إضافة قناة - نيون أزرق */
 .plus-btn {
-    background: linear-gradient(90deg, #00e701, #00c001);
-    border: none;
-    padding: 12px 25px;
-    border-radius: 10px;
-    font-weight: bold;
-    color: black;
+    background: transparent;
+    color: var(--neon-blue);
+    border: 2px solid var(--neon-blue);
+    padding: 10px 25px;
+    border-radius: 50px;
+    font-weight: 600;
     cursor: pointer;
-    margin: 20px;
     transition: 0.3s;
-    box-shadow: 0 4px 15px rgba(0, 231, 1, 0.3);
+    text-transform: uppercase;
+    box-shadow: inset 0 0 10px rgba(0, 210, 255, 0.2);
 }
 
 .plus-btn:hover {
-    transform: scale(1.05);
-    box-shadow: 0 6px 20px rgba(0, 231, 1, 0.5);
+    background: var(--neon-blue);
+    color: black;
+    box-shadow: 0 0 25px var(--neon-blue);
 }
 
-/* عداد المشاهدات */
-.viewers {
-    color: #00e701;
+/* توزيع البطاقات */
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 35px;
+    padding: 50px 5%;
+}
+
+/* البطاقة الذكية */
+.card {
+    background: var(--glass);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 25px;
+    padding: 40px 20px;
+    text-align: center;
+    position: relative;
+    transition: 0.5s;
+    overflow: hidden;
+}
+
+/* تأثير البرق الأزرق عند الـ Hover */
+.card:hover {
+    transform: translateY(-15px);
+    border-color: var(--neon-blue);
+    box-shadow: 0 15px 40px rgba(0, 210, 255, 0.2);
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: conic-gradient(transparent, transparent, transparent, var(--neon-blue));
+    animation: rotate 4s linear infinite;
+    z-index: -1;
+    opacity: 0;
+    transition: 0.5s;
+}
+
+.card:hover::before { opacity: 1; }
+
+@keyframes rotate {
+    100% { transform: rotate(360deg); }
+}
+
+/* صورة الستريمر */
+.avatar-container {
+    width: 110px;
+    height: 110px;
+    margin: 0 auto 20px;
+    position: relative;
+}
+
+.profile-img {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    border: 4px solid #1a1d23;
+    object-fit: cover;
+    transition: 0.4s;
+}
+
+.card:hover .profile-img {
+    border-color: var(--neon-blue);
+    transform: scale(1.1);
+}
+
+/* شارة LIVE */
+.status-badge {
+    position: absolute;
+    top: 20px; right: 20px;
+    background: var(--deep-blue);
+    padding: 5px 15px;
+    border-radius: 50px;
+    font-size: 11px;
     font-weight: bold;
-    font-size: 14px;
-    margin-top: 10px;
+    box-shadow: 0 0 15px var(--neon-blue);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* زر المشاهدة */
+.watch-link {
+    display: block;
+    margin-top: 20px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.watch-link:hover {
+    background: var(--neon-blue);
+    color: black;
 }
