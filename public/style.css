@@ -1,0 +1,81 @@
+.stream-card {
+    background: rgba(255, 255, 255, 0.05);
+    /* تأثير الزجاج */
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 20px;
+    width: 300px;
+    transition: 0.3s;
+    color: white;
+}
+
+.stream-card:hover {
+    transform: translateY(-10px);
+    border-color: #00e701;
+    /* لون كيك الرسمي */
+    box-shadow: 0 10px 30px rgba(0, 231, 1, 0.2);
+}
+
+.status-badge.live {
+    background: #ff4b4b;
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+body {
+    background: #0b0e11;
+    color: white;
+    font-family: sans-serif;
+}
+
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.card {
+    background: linear-gradient(145deg, #1a1d23, #111418);
+    border-radius: 15px;
+    padding: 20px;
+    border: 1px solid #333;
+    transition: 0.3s;
+}
+
+.card:hover {
+    border-color: #00e701;
+    transform: scale(1.05);
+}
+
+.plus-btn {
+    background: #00e701;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    margin: 20px;
+}
+
+.live {
+    color: #ff4b4b;
+    font-weight: bold;
+}
