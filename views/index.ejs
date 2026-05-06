@@ -4,7 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Black List | Kick Hub</title>
+    <title>Black List Hub</title>
+    <!-- 🌍 تغيير شكل التبويب (الأيقونة) -->
+    <link rel="icon" type="image/png" href="/black.png">
     <link rel="stylesheet" href="/style.css">
     <link rel="stylesheet" href="https://cloudflare.com">
 </head>
@@ -13,47 +15,49 @@
     <div class="animated-bg"></div>
 
     <header class="main-header">
-        <img src="/black.png" alt="Logo" class="header-logo">
+        <img src="/black.png" alt="Logo" style="height: 50px;">
         <div class="header-btns">
             <button class="plus-btn" onclick="openSocial()">حساباتنا</button>
             <button class="plus-btn" onclick="openModal()">+ أضف قناتك</button>
         </div>
     </header>
 
-    <!-- مربعات الإحصائيات -->
     <div class="stats-container">
-        <div class="stat-box">
-            <small>إجمالي الستريمرز</small>
+        <div class="stat-box"><small>إجمالي الستريمرز</small>
             <h2>
                 <%= stats.totalStreamers %>
             </h2>
         </div>
-        <div class="stat-box">
-            <small>مشاهد حالياً</small>
+        <div class="stat-box"><small>مشاهد حالياً</small>
             <h2 style="color: var(--neon-blue);">
                 <%= stats.totalViewers %>
             </h2>
         </div>
-        <div class="stat-box">
-            <small>ستريمر نشط الآن</small>
+        <div class="stat-box"><small>ستريمر نشط الآن</small>
             <h2 style="color: #53fc18;">
                 <%= stats.liveNow %>
             </h2>
         </div>
     </div>
 
-    <!-- منيو الفلترة -->
-    <div class="filter-menu">
-        <button onclick="filter('high')">الأعلى مشاهدة</button>
-        <button onclick="filter('low')">الأقل مشاهدة</button>
-        <button onclick="filter('live')">لايف الآن</button>
-        <button onclick="filter('offline')">أوفلاين</button>
+    <!-- 🔍 المنيو المنسدل للفلترة -->
+    <div class="filter-container">
+        <select class="filter-select" onchange="runFilter(this.value)">
+            <option value="all">كل القنوات</option>
+            <option value="fav">⭐ المفضلة</option>
+            <option value="live">🔴 البث المباشر</option>
+            <option value="high">🏆 الأعلى مشاهدة</option>
+            <option value="low">📉 الأقل مشاهدة</option>
+            <option value="offline">💤 غير متصل</option>
+        </select>
     </div>
 
     <div class="cards-grid" id="mainGrid">
         <% streamers.forEach(streamer=> { %>
-            <div class="card" data-viewers="<%= streamer.viewers %>" data-live="<%= streamer.isLive %>">
-                <i class="fas fa-star star-icon"></i>
+            <div class="card" id="card-<%= streamer.kickUsername %>" data-viewers="<%= streamer.viewers %>"
+                data-live="<%= streamer.isLive %>">
+                <!-- 🌟 نجمة المفضلة -->
+                <i class="fas fa-star star-btn" onclick="toggleFav('<%= streamer.kickUsername %>')"></i>
 
                 <div class="profile-side" style="display: flex; flex-direction: column; align-items: center;">
                     <img src="<%= streamer.profilePic || '/black.png' %>" class="profile-img">
@@ -61,54 +65,58 @@
                     </div>
                 </div>
 
-                <div class="info-side">
+                <div class="card-content">
                     <h3 style="margin: 0;">
                         <%= streamer.kickUsername %>
                     </h3>
                     <% if(streamer.isLive) { %>
-                        <div style="color: #ff4b4b; font-size: 12px;"><span class="dot"></span> LIVE</div>
+                        <div style="color: #ff4b4b; font-size: 11px;">● LIVE</div>
                         <% } %>
-                            <a href="https://kick.com<%= streamer.kickUsername %>" target="_blank"
-                                class="watch-btn">مشاهدة البث</a>
+                            <a href="https://kick.com<%= streamer.kickUsername %>" target="_blank" class="watch-btn"
+                                style="background: linear-gradient(90deg, var(--dark-blue), var(--neon-blue)); color: white; padding: 6px 20px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: bold; display: inline-block; margin-top: 8px;">مشاهدة
+                                البث</a>
                 </div>
             </div>
             <% }) %>
     </div>
 
-    <!-- مودال الحسابات -->
-    <div id="socialModal" class="social-modal">
-        <div class="social-content">
-            <div style="background: var(--dark-blue); padding: 10px; border-radius: 10px; margin-bottom: 20px;">
-                <h3>حسابات عصابة بلاك ليست</h3>
-            </div>
-            <div class="social-grid">
-                <a href="https://x.com/BlackListt_BL?s=20" target="_blank" class="social-box">تويتر X</a>
-                <a href="https://discord.gg/KXNVuf8u" target="_blank" class="social-box">ديسكورد</a>
-            </div>
-            <button onclick="closeSocial()"
-                style="margin-top: 20px; background: none; color: gray; border: none; cursor: pointer;">إغلاق</button>
-        </div>
-    </div>
-
-    <!-- كود المودال والفلترة JS -->
     <script>
-        function openSocial() { document.getElementById('socialModal').style.display = 'flex'; }
-        function closeSocial() { document.getElementById('socialModal').style.display = 'none'; }
+        // 💾 نظام المفضلة
+        function toggleFav(user) {
+            let favs = JSON.parse(localStorage.getItem('blacklist_favs')) || [];
+            const index = favs.indexOf(user);
+            if (index > -1) { favs.splice(index, 1); } else { favs.push(user); }
+            localStorage.setItem('blacklist_favs', JSON.stringify(favs));
+            updateStars();
+        }
 
-        function filter(type) {
-            const cards = Array.from(document.querySelectorAll('.card'));
-            const grid = document.getElementById('mainGrid');
-
-            if (type === 'high') cards.sort((a, b) => b.dataset.viewers - a.dataset.viewers);
-            if (type === 'low') cards.sort((a, b) => a.dataset.viewers - b.dataset.viewers);
-
-            grid.innerHTML = "";
-            cards.forEach(c => {
-                if (type === 'live' && c.dataset.live === 'false') return;
-                if (type === 'offline' && c.dataset.live === 'true') return;
-                grid.appendChild(c);
+        function updateStars() {
+            let favs = JSON.parse(localStorage.getItem('blacklist_favs')) || [];
+            document.querySelectorAll('.card').forEach(card => {
+                const user = card.id.replace('card-', '');
+                const star = card.querySelector('.star-btn');
+                if (favs.includes(user)) star.classList.add('active'); else star.classList.remove('active');
             });
         }
+
+        function runFilter(type) {
+            const cards = Array.from(document.querySelectorAll('.card'));
+            const favs = JSON.parse(localStorage.getItem('blacklist_favs')) || [];
+            cards.forEach(c => {
+                c.style.display = "flex";
+                const user = c.id.replace('card-', '');
+                if (type === 'live' && c.dataset.live === 'false') c.style.display = "none";
+                if (type === 'offline' && c.dataset.live === 'true') c.style.display = "none";
+                if (type === 'fav' && !favs.includes(user)) c.style.display = "none";
+            });
+            // ترتيب المشاهدات
+            if (type === 'high' || type === 'low') {
+                const grid = document.getElementById('mainGrid');
+                cards.sort((a, b) => type === 'high' ? b.dataset.viewers - a.dataset.viewers : a.dataset.viewers - b.dataset.viewers);
+                grid.innerHTML = ""; cards.forEach(c => grid.appendChild(c));
+            }
+        }
+        window.onload = updateStars;
     </script>
 </body>
 

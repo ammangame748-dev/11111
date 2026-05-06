@@ -3,191 +3,89 @@
 :root {
     --neon-blue: #00d2ff;
     --dark-blue: #0051ff;
-    --bg-deep: #020408;
-    --card-bg: #0a0c10;
+    --bg-black: #05070a;
 }
 
 body {
-    background: var(--bg-deep);
+    background: var(--bg-black);
     color: white;
     font-family: 'Poppins', sans-serif;
-    margin: 0;
-    direction: rtl;
-    overflow-x: hidden;
+    margin: 0; direction: rtl; overflow-x: hidden;
 }
 
-/* 🖼️ الخلفية المتحركة */
 .animated-bg {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: url('/bg-video.GIF') no-repeat center center fixed;
-    background-size: cover;
-    z-index: -2;
-    filter: brightness(0.2);
+    background-size: cover; z-index: -2; filter: brightness(0.2);
 }
 
-/* 🔝 الهيدر العلوي */
+/* 🔝 هيدر أزرق فخم */
 .main-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 5%;
-    background: rgba(0, 0, 0, 0.8);
-    border-bottom: 2px solid var(--dark-blue);
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 15px 5%; background: rgba(0,0,0,0.8);
+    border-bottom: 2px solid var(--dark-blue); box-shadow: 0 0 15px var(--dark-blue);
 }
 
-.header-logo { height: 50px; }
-
-/* 📊 مربعات الإحصائيات (متحركة) */
-.stats-container {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-    padding: 20px 5%;
+.header-btns .plus-btn {
+    background: transparent; color: var(--neon-blue);
+    border: 1px solid var(--neon-blue); padding: 8px 20px;
+    border-radius: 8px; font-weight: 600; cursor: pointer;
+    box-shadow: 0 0 10px rgba(0, 210, 255, 0.2); transition: 0.3s;
 }
 
-.stat-box {
-    background: var(--card-bg);
-    padding: 15px;
-    border-radius: 12px;
-    text-align: center;
-    border: 1px solid var(--dark-blue);
-    position: relative;
-    overflow: hidden;
-}
+.header-btns .plus-btn:hover { background: var(--neon-blue); color: black; box-shadow: 0 0 20px var(--neon-blue); }
 
-.stat-box::before {
-    content: '';
-    position: absolute;
-    top: 0; left: -100%;
-    width: 100%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(0, 210, 255, 0.1), transparent);
-    animation: sweep 3s infinite;
-}
-
-@keyframes sweep { 100% { left: 100%; } }
-
-/* 🔍 منيو الفلترة */
-.filter-menu {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    padding: 10px;
-    background: rgba(255,255,255,0.05);
-}
-
-.filter-menu button {
-    background: none;
-    border: 1px solid var(--dark-blue);
-    color: white;
-    padding: 5px 15px;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-.filter-menu button:hover { background: var(--dark-blue); }
-
-/* 🃏 البطاقات العريضة (نحيفة وكبيرة) */
+/* 🃏 البطاقات العريضة النحيفة مع حواف متحركة (بدون لمس) */
 .cards-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    padding: 20px 10%;
+    display: flex; flex-direction: column; gap: 15px; padding: 20px 10%;
 }
 
 .card {
-    display: flex;
-    flex-direction: row-reverse;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--card-bg);
-    border-radius: 15px;
-    padding: 15px 40px;
-    height: 100px; /* طول نحيف وحجم عرضي كبير */
-    position: relative;
-    border: 1.5px solid transparent;
-    background-clip: padding-box;
-    transition: 0.4s;
+    display: flex; flex-direction: row-reverse; justify-content: space-between;
+    align-items: center; background: #0a0c10;
+    border-radius: 12px; padding: 10px 30px; height: 100px;
+    position: relative; overflow: hidden;
 }
 
-/* ✨ حواف زرقاء متحركة (بسرعة عادية) */
+/* ⚡ الأنيميشن المتحرك على الحواف (دائم) */
+.card::before {
+    content: ''; position: absolute; top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: conic-gradient(transparent, transparent, transparent, var(--neon-blue));
+    animation: rotate-border 3s linear infinite; z-index: 1;
+}
+
 .card::after {
-    content: '';
-    position: absolute;
-    top: -2px; left: -2px; right: -2px; bottom: -2px;
-    background: linear-gradient(90deg, var(--dark-blue), var(--neon-blue), var(--dark-blue));
-    background-size: 200% 200%;
-    z-index: -1;
-    border-radius: 16px;
-    animation: moveGradient 4s linear infinite;
+    content: ''; position: absolute; inset: 2px;
+    background: #0a0c10; border-radius: 10px; z-index: 2;
 }
 
-@keyframes moveGradient {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 200% 50%; }
+@keyframes rotate-border { 100% { transform: rotate(360deg); } }
+
+/* 🌟 النجمة والمحتوى (فوق الحركات) */
+.star-btn {
+    position: absolute; top: 10px; right: 10px; z-index: 10;
+    color: #444; font-size: 20px; cursor: pointer; transition: 0.3s;
+}
+.star-btn.active { color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
+
+.card-content, .profile-side { position: relative; z-index: 5; }
+
+.profile-img { width: 70px; height: 70px; border-radius: 50%; border: 2px solid var(--neon-blue); }
+
+/* 🔍 المنيو (Drop Down) للفلترة */
+.filter-container { text-align: center; margin: 20px 0; }
+.filter-select {
+    background: #111; color: white; border: 1px solid var(--dark-blue);
+    padding: 8px 25px; border-radius: 10px; outline: none; cursor: pointer;
 }
 
-.card:hover { transform: scale(1.02); }
-
-/* 🌟 النجمة */
-.star-icon {
-    position: absolute;
-    top: 10px; right: 10px;
-    color: var(--neon-blue);
-    font-size: 18px;
+/* 📊 مربعات الإحصائيات مع حواف نيون */
+.stats-container {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 20px 10%;
 }
-
-.profile-img {
-    width: 80px; height: 80px;
-    border-radius: 50%;
-    border: 2px solid var(--neon-blue);
+.stat-box {
+    background: #0a0c10; padding: 15px; border-radius: 10px;
+    border: 1px solid var(--dark-blue); text-align: center;
+    box-shadow: 0 0 10px rgba(0, 81, 255, 0.3);
 }
-
-.watch-btn {
-    background: linear-gradient(90deg, var(--dark-blue), var(--neon-blue));
-    color: white;
-    padding: 8px 25px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-/* 📱 مودال الحسابات */
-.social-modal {
-    display: none;
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.9);
-    z-index: 3000;
-    align-items: center; justify-content: center;
-}
-
-.social-content {
-    background: #111;
-    padding: 30px;
-    border-radius: 20px;
-    border: 2px solid var(--neon-blue);
-    width: 400px;
-    text-align: center;
-}
-
-.social-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin-top: 20px;
-}
-
-.social-box {
-    background: #222;
-    padding: 15px;
-    border-radius: 10px;
-    border: 1px solid var(--dark-blue);
-    color: white;
-    text-decoration: none;
-    transition: 0.3s;
-}
-
-.social-box:hover { border-color: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); }
