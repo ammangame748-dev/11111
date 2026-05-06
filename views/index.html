@@ -1,0 +1,65 @@
+<div class="stream-card">
+    <div class="card-header">
+        <span class="status-badge live">LIVE</span>
+        <div class="viewers">
+            <i class="fas fa-eye"></i> 1.2k
+        </div>
+    </div>
+    
+    <div class="channel-info">
+        <div class="avatar-wrapper">
+            <img src="public/images/avatar.jpg" alt="Channel Logo">
+        </div>
+        <h3>اسم القناة</h3>
+        <p class="stream-title">بث مباشر للعبة GTA V - حماس ألف!</p>
+    </div>
+    
+    <button class="watch-btn">مشاهدة البث</button>
+</div>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <link rel="stylesheet" href="style.css">
+    <title>Kick Streamers Hub</title>
+</head>
+<body>
+    <header>
+        <button id="addBtn" class="plus-btn">+ أضف قناتك</button>
+    </header>
+
+    <div id="container" class="cards-grid">
+        <!-- البطاقات رح تنزل هون بالـ JS -->
+    </div>
+
+    <script>
+        // كود لجلب القنوات وعرضها
+        fetch('/get-channels')
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('container');
+                data.forEach(ch => {
+                    container.innerHTML += `
+                        <div class="card">
+                            <div class="badge ${ch.status}">${ch.status.toUpperCase()}</div>
+                            <h3>${ch.name}</h3>
+                            <p>${ch.title}</p>
+                            <span>👁️ ${ch.viewers}</span>
+                        </div>
+                    `;
+                });
+            });
+
+        // كود زر الإضافة
+        document.getElementById('addBtn').onclick = () => {
+            const name = prompt("ادخل اسم قناتك على Kick:");
+            if(name) {
+                fetch('/add-channel', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({name: name})
+                }).then(res => alert("وصل الطلب للآدمن!"));
+            }
+        };
+    </script>
+</body>
+</html>
