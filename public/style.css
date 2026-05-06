@@ -10,82 +10,208 @@ body {
     background: var(--bg-black);
     color: white;
     font-family: 'Poppins', sans-serif;
-    margin: 0; direction: rtl; overflow-x: hidden;
+    margin: 0;
+    direction: rtl;
+    overflow-x: hidden;
 }
 
+/* 🖼️ الخلفية المتحركة GIF */
 .animated-bg {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     background: url('/bg-video.GIF') no-repeat center center fixed;
-    background-size: cover; z-index: -2; filter: brightness(0.2);
+    background-size: cover;
+    z-index: -2;
+    filter: brightness(0.2);
 }
 
-/* 🔝 هيدر أزرق فخم */
+/* 🔝 الهيدر */
 .main-header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 15px 5%; background: rgba(0,0,0,0.8);
-    border-bottom: 2px solid var(--dark-blue); box-shadow: 0 0 15px var(--dark-blue);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 5%;
+    background: rgba(0, 0, 0, 0.9);
+    border-bottom: 2px solid var(--dark-blue);
+    box-shadow: 0 0 20px rgba(0, 81, 255, 0.3);
 }
 
-.header-btns .plus-btn {
-    background: transparent; color: var(--neon-blue);
-    border: 1px solid var(--neon-blue); padding: 8px 20px;
-    border-radius: 8px; font-weight: 600; cursor: pointer;
-    box-shadow: 0 0 10px rgba(0, 210, 255, 0.2); transition: 0.3s;
+.header-logo { height: 45px; }
+
+.plus-btn {
+    background: transparent;
+    color: var(--neon-blue);
+    border: 1px solid var(--neon-blue);
+    padding: 6px 15px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 8px;
+    transition: 0.3s;
 }
 
-.header-btns .plus-btn:hover { background: var(--neon-blue); color: black; box-shadow: 0 0 20px var(--neon-blue); }
+.plus-btn:hover {
+    background: var(--neon-blue);
+    color: black;
+    box-shadow: 0 0 15px var(--neon-blue);
+}
 
-/* 🃏 البطاقات العريضة النحيفة مع حواف متحركة (بدون لمس) */
+/* 📊 مربعات الإحصائيات */
+.stats-container {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    padding: 20px;
+}
+
+.stat-item { text-align: center; }
+.stat-item h3 { margin: 5px 0; font-size: 24px; }
+.stat-item small { color: #888; font-weight: bold; }
+
+/* 🔍 منيو الفلترة */
+.filter-container { text-align: center; margin-bottom: 20px; }
+.filter-select {
+    background: #111;
+    color: white;
+    border: 1px solid var(--dark-blue);
+    padding: 8px 25px;
+    border-radius: 8px;
+    cursor: pointer;
+    outline: none;
+}
+
+/* 🃏 البطاقات العريضة (Justice City Size) مع حواف نيون متحركة */
 .cards-grid {
-    display: flex; flex-direction: column; gap: 15px; padding: 20px 10%;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 20px;
+    padding: 20px 8%;
 }
 
 .card {
-    display: flex; flex-direction: row-reverse; justify-content: space-between;
-    align-items: center; background: #0a0c10;
-    border-radius: 12px; padding: 10px 30px; height: 100px;
-    position: relative; overflow: hidden;
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    align-items: center;
+    background: #0f1217;
+    border-radius: 10px;
+    padding: 12px 25px;
+    height: 100px; /* الارتفاع المثالي */
+    position: relative;
+    overflow: hidden;
 }
 
-/* ⚡ الأنيميشن المتحرك على الحواف (دائم) */
+/* ✨ الأنيميشن المتحرك الدائم على الحواف */
 .card::before {
-    content: ''; position: absolute; top: -50%; left: -50%;
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
     width: 200%; height: 200%;
     background: conic-gradient(transparent, transparent, transparent, var(--neon-blue));
-    animation: rotate-border 3s linear infinite; z-index: 1;
+    animation: rotate-border 3s linear infinite;
+    z-index: 1;
 }
 
 .card::after {
-    content: ''; position: absolute; inset: 2px;
-    background: #0a0c10; border-radius: 10px; z-index: 2;
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: #0f1217;
+    border-radius: 8px;
+    z-index: 2;
 }
 
-@keyframes rotate-border { 100% { transform: rotate(360deg); } }
+@keyframes rotate-border {
+    100% { transform: rotate(360deg); }
+}
 
-/* 🌟 النجمة والمحتوى (فوق الحركات) */
+/* 🌟 النجمة */
 .star-btn {
-    position: absolute; top: 10px; right: 10px; z-index: 10;
-    color: #444; font-size: 20px; cursor: pointer; transition: 0.3s;
-}
-.star-btn.active { color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
-
-.card-content, .profile-side { position: relative; z-index: 5; }
-
-.profile-img { width: 70px; height: 70px; border-radius: 50%; border: 2px solid var(--neon-blue); }
-
-/* 🔍 المنيو (Drop Down) للفلترة */
-.filter-container { text-align: center; margin: 20px 0; }
-.filter-select {
-    background: #111; color: white; border: 1px solid var(--dark-blue);
-    padding: 8px 25px; border-radius: 10px; outline: none; cursor: pointer;
+    position: absolute;
+    top: 8px; right: 8px;
+    z-index: 10;
+    color: #333;
+    font-size: 18px;
+    cursor: pointer;
+    transition: 0.3s;
 }
 
-/* 📊 مربعات الإحصائيات مع حواف نيون */
-.stats-container {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 20px 10%;
+.star-btn.active {
+    color: var(--neon-blue);
+    text-shadow: 0 0 10px var(--neon-blue);
 }
-.stat-box {
-    background: #0a0c10; padding: 15px; border-radius: 10px;
-    border: 1px solid var(--dark-blue); text-align: center;
-    box-shadow: 0 0 10px rgba(0, 81, 255, 0.3);
+
+/* 🔴 محتوى البطاقة */
+.profile-side, .card-content { position: relative; z-index: 5; }
+
+.profile-img {
+    width: 65px; height: 65px;
+    border-radius: 50%;
+    border: 2px solid var(--neon-blue);
+}
+
+.viewers-count { font-size: 10px; color: #888; margin-top: 4px; text-align: center; }
+
+.card-content { text-align: center; flex: 1; }
+
+.kick-tag {
+    background: #53fc18;
+    color: black;
+    font-size: 9px;
+    font-weight: bold;
+    padding: 1px 6px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-bottom: 4px;
+}
+
+.card-content h3 { margin: 2px 0; font-size: 18px; }
+
+.live-badge {
+    color: #ff4b4b;
+    font-size: 11px;
+    font-weight: bold;
+    animation: pulse 1.2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(0.9); opacity: 0.6; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.watch-btn {
+    background: #00e5ff;
+    color: black;
+    padding: 5px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: bold;
+    display: inline-block;
+    margin-top: 5px;
+    transition: 0.3s;
+}
+
+.watch-btn.offline { background: #333; color: #aaa; }
+
+/* 📱 المودالات (Popups) */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    z-index: 3000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-box {
+    background: #111;
+    padding: 30px;
+    border-radius: 15px;
+    border: 2px solid var(--neon-blue);
+    width: 320px;
+    text-align: center;
 }
