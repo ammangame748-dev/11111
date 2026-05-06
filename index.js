@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
+const port = process.env.PORT || 3000; // مهم جداً عشان Render
 const fs = require('fs');
 
 const app = express();
