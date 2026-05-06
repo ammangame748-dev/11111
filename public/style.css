@@ -1,81 +1,99 @@
-.stream-card {
-    background: rgba(255, 255, 255, 0.05);
-    /* تأثير الزجاج */
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
-    padding: 20px;
-    width: 300px;
-    transition: 0.3s;
+/* الألوان والأساسيات */
+body {
+    background: #0b0e11;
     color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    direction: rtl; /* ليدعم اللغة العربية بشكل صحيح */
 }
 
-.stream-card:hover {
+/* حاوية البطاقات */
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+    padding: 30px;
+}
+
+/* تصميم البطاقة الأساسي */
+.card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 25px;
+    text-align: center;
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* تأثير عند تمرير الماوس */
+.card:hover {
     transform: translateY(-10px);
-    border-color: #00e701;
-    /* لون كيك الرسمي */
+    border-color: #00e701; /* لون كيك الأخضر */
     box-shadow: 0 10px 30px rgba(0, 231, 1, 0.2);
 }
 
-.status-badge.live {
+/* صورة الستريمر الدائرية */
+.profile-img {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    border: 3px solid #333;
+    margin-bottom: 15px;
+    object-fit: cover;
+}
+
+/* إذا كان لايف نغير لون الإطار */
+.live-border .profile-img {
+    border-color: #00e701;
+    box-shadow: 0 0 15px rgba(0, 231, 1, 0.5);
+}
+
+/* شارة الـ LIVE */
+.status-badge {
+    position: absolute;
+    top: 15px;
+    left: 15px;
     background: #ff4b4b;
-    padding: 4px 10px;
-    border-radius: 5px;
-    font-size: 12px;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: bold;
     animation: blink 1.5s infinite;
 }
 
 @keyframes blink {
-    0% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.5;
-    }
-
-    100% {
-        opacity: 1;
-    }
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
 }
 
-body {
-    background: #0b0e11;
-    color: white;
-    font-family: sans-serif;
-}
-
-.cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-    padding: 20px;
-}
-
-.card {
-    background: linear-gradient(145deg, #1a1d23, #111418);
-    border-radius: 15px;
-    padding: 20px;
-    border: 1px solid #333;
-    transition: 0.3s;
-}
-
-.card:hover {
-    border-color: #00e701;
-    transform: scale(1.05);
-}
-
+/* زر "أضف قناتك" */
 .plus-btn {
-    background: #00e701;
+    background: linear-gradient(90deg, #00e701, #00c001);
     border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
+    padding: 12px 25px;
+    border-radius: 10px;
     font-weight: bold;
+    color: black;
     cursor: pointer;
     margin: 20px;
+    transition: 0.3s;
+    box-shadow: 0 4px 15px rgba(0, 231, 1, 0.3);
 }
 
-.live {
-    color: #ff4b4b;
+.plus-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 231, 1, 0.5);
+}
+
+/* عداد المشاهدات */
+.viewers {
+    color: #00e701;
     font-weight: bold;
+    font-size: 14px;
+    margin-top: 10px;
 }

@@ -1,18 +1,14 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const axios = require('axios');
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views')); // أخبر السيرفر بمكان المجلد
-app.use(express.static(path.join(__dirname, 'public')));
 
-// ✅ تم إزالة مكتبة Pusher لأنها تسبب الخطأ ولست بحاجة لها مع وجود دالة التحديث الدوري
-const app = express();
-
-
+const app = express(); // <--- تأكد إن هذا السطر موجود هون بالظبط
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json()); // ضيف هذا السطر كمان عشان يستقبل بيانات الـ JSON صح
+
 
 // ================= DATABASE =================
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://hsamhmaydh4_db_user:xls5Av4Nr4a5PA7W@cluster0.wjnh8d0.mongodb.net/?appName=Cluster0";

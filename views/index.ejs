@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kick Hub | منصة الستريمرز</title>
+    <link rel="stylesheet" href="/style.css"> <!-- هاد بربط بملف الـ CSS اللي في public -->
+</head>
+<body>
+
+    <header>
+        <div class="logo">KICK<span>HUB</span></div>
+        <button class="plus-btn" onclick="openModal()">+ أضف قناتك</button>
+    </header>
+
+    <!-- إحصائيات سريعة -->
+    <div class="stats-bar">
+        <span>القنوات: <%= stats.totalStreamers %></span>
+        <span>بث مباشر الآن: <b style="color: #00e701;"><%= stats.liveNow %></b></span>
+    </div>
+
+    <div class="cards-grid">
+        <% streamers.forEach(streamer => { %>
+            <div class="card <%= streamer.isLive ? 'live-border' : '' %>">
+                <% if(streamer.isLive) { %>
+                    <span class="status-badge">LIVE</span>
+                <% } %>
+                
+                <div class="avatar-container">
+                    <img src="<%= streamer.profilePic || 'https://kick.com' %>" class="profile-img">
+                </div>
+                
+                <h3><%= streamer.kickUsername %></h3>
+                
+                <div class="viewers">
+                    👁️ <%= streamer.viewers %> مشاهد
+                </div>
+
+                <a href="https://kick.com<%= streamer.kickUsername %>" target="_blank" class="watch-link">
+                    مشاهدة البث
+                </a>
+            </div>
+        <% }) %>
+    </div>
+
+    <!-- نافذة الإضافة (Modal) -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <h2>إضافة قناة جديدة</h2>
+            <form action="/apply" method="POST">
+                <input type="text" name="kickUser" placeholder="اسم المستخدم في Kick" required>
+                <input type="text" name="discordName" placeholder="اسمك في ديسكورد">
+                <button type="submit" class="submit-btn">إرسال الطلب</button>
+                <button type="button" onclick="closeModal()" class="close-btn">إلغاء</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openModal() { document.getElementById('addModal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('addModal').style.display = 'none'; }
+    </script>
+</body>
+</html>
