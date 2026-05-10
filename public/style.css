@@ -108,10 +108,12 @@ body {
     padding: 20px 5%;
 }
 
+/* البطاقة الأساسية */
 .card {
     display: flex;
     flex-direction: row-reverse;
-    /* الصورة عاليمين والكلام عاليسار */
+    /* هاد اللي بيرجع الصورة عاليمين */
+    justify-content: space-between;
     align-items: center;
     background: #0f1217;
     border-radius: 12px;
@@ -119,11 +121,10 @@ body {
     height: 110px;
     position: relative;
     overflow: hidden;
-    /* ضروري عشان يقص الألوان اللي بتلف */
     z-index: 1;
 }
 
-/* ✨ الألوان اللي بتلف حوالين البطاقة */
+/* الألوان اللي بتلف (النيون) */
 .card::before {
     content: '';
     position: absolute;
@@ -131,23 +132,74 @@ body {
     left: -50%;
     width: 200%;
     height: 200%;
-    /* اللون النيون اللي بيلف */
     background: conic-gradient(transparent, transparent, transparent, var(--neon-blue));
     animation: rotate-border 3s linear infinite;
     z-index: -1;
-    /* خلف المحتوى */
 }
 
-/* الطبقة السوداء الداخلية عشان تظهر الحواف فقط */
+/* الطبقة السوداء الداخلية */
 .card::after {
     content: '';
     position: absolute;
     inset: 3px;
-    /* سمك الحافة الملونة */
     background: #0f1217;
     border-radius: 10px;
     z-index: -1;
-    /* خلف المحتوى وفوق الألوان اللي بتلف */
+}
+
+/* تاغ KICK بالزاوية اليسرى فوق */
+.kick-tag {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #53fc18;
+    color: black;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 4px;
+    z-index: 5;
+}
+
+/* جهة الصورة (بتكون عاليمين بسبب row-reverse) */
+.profile-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-left: 10px;
+    z-index: 5;
+}
+
+.profile-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 2px solid var(--neon-blue);
+    margin-bottom: 5px;
+}
+
+.viewers-count {
+    font-size: 11px;
+    color: var(--neon-blue);
+    font-weight: bold;
+}
+
+/* جهة الكلام (بتكون عاليسار) */
+.card-content {
+    flex: 1;
+    text-align: right;
+    /* الكلام محاذى لليمين داخل منطقته */
+    padding-right: 15px;
+    z-index: 5;
+}
+
+.status-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 0;
+    justify-content: flex-end;
+    /* لضمان محاذاة الحالة مع النص */
 }
 
 @keyframes rotate-border {
@@ -155,6 +207,7 @@ body {
         transform: rotate(360deg);
     }
 }
+
 
 /* تأكيد أن المحتوى فوق الألوان */
 .profile-side,
