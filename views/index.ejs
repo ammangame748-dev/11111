@@ -71,30 +71,48 @@
         <% streamers.forEach(streamer=> { %>
             <div class="card" id="card-<%= streamer.kickUsername %>" data-viewers="<%= streamer.viewers %>"
                 data-live="<%= streamer.isLive %>">
-                <i class="fas fa-star star-btn" onclick="toggleFav('<%= streamer.kickUsername %>')"></i>
+
+                <!-- 1. تاغ KICK بالزاوية اليسرى فوق -->
+                <div class="kick-tag">KICK</div>
+
+                <!-- 2. الجهة اليسرى: الصورة وتحتها VIEWERS -->
                 <div class="profile-side">
                     <img src="<%= streamer.profilePic || '/black.png' %>" class="profile-img">
                     <div class="viewers-count">VIEWERS <%= streamer.viewers %>
                     </div>
                 </div>
+
+                <!-- 3. الجهة اليمنى: الاسم، الحالة (نقطة تنبض)، والزر -->
                 <div class="card-content">
-                    <div class="kick-tag">KICK</div>
                     <h3>
                         <%= streamer.kickUsername %>
                     </h3>
+
+                    <div class="status-wrapper">
+                        <% if(streamer.isLive) { %>
+                            <span class="status-dot dot-live"></span>
+                            <span class="live-text">LIVE</span>
+                            <% } else { %>
+                                <span class="status-dot dot-offline"></span>
+                                <span class="offline-text">OFFLINE</span>
+                                <% } %>
+                    </div>
+
                     <% if(streamer.isLive) { %>
-                        <div class="live-badge">LIVE</div><br>
-                        <a href="https://kick.com/<%= streamer.kickUsername %>" target="_blank" class="watch-btn">مشاهدة
+                        <a href="https://kick.com/<%= streamer.kickUsername %>" target="_blank" class="watch-btn">دخول
                             البث</a>
                         <% } else { %>
-                            <div style="color: #555; font-size: 11px;">غير متصل</div><br>
                             <a href="https://kick.com/<%= streamer.kickUsername %>" target="_blank"
                                 class="watch-btn offline">زيارة القناة</a>
                             <% } %>
                 </div>
+
+                <!-- نجمة المفضلة -->
+                <i class="fas fa-star star-btn" onclick="toggleFav('<%= streamer.kickUsername %>')"></i>
             </div>
             <% }) %>
     </div>
+
 
     <!-- المودالات -->
     <div id="socialModal" class="modal-overlay">
