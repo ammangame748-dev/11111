@@ -172,22 +172,22 @@ body {
     font-weight: bold;
 }
 
-/* تاغ KICK - التعديل هنا ليكون بالزاوية فوق الصورة */
 .kick-tag {
     position: absolute;
-    top: 12px;
-    /* المسافة من فوق */
-    right: 12px;
-    /* المسافة من اليمين - هيك صار فوق الصورة بالضبط */
-    left: auto;
-    /* عشان نلغي أي قيمة قديمة لجهة اليسار */
+    top: 0;
+    /* لجعلها في أعلى الزاوية تماماً */
+    left: 0;
+    /* لجعلها في أقصى اليسار */
+    right: auto;
+    /* إلغاء أي قيم سابقة لجهة اليمين */
 
     background: #53fc18;
     color: black;
     font-size: 10px;
     font-weight: bold;
     padding: 2px 8px;
-    border-radius: 4px;
+    border-radius: 4px 0 4px 0;
+    /* اختيار اختياري: لضبط الحواف مع الزاوية */
     z-index: 10;
 }
 
