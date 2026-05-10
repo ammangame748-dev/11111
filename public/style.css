@@ -108,13 +108,12 @@ body {
     padding: 20px 5%;
 }
 
-/* البطاقة الأساسية - التعديل هنا لجعل العناصر تبدأ من اليسار */
+/* البطاقة الأساسية - ترتيب من اليمين لليسار */
 .card {
     display: flex;
-    flex-direction: row;
-    /* العناصر تترتب أفقياً */
+    flex-direction: row-reverse;
+    /* عكس الاتجاه لتصبح الصورة على اليمين */
     justify-content: flex-start;
-    /* تبدأ من اليسار */
     align-items: center;
     background: #0f1217;
     border-radius: 12px;
@@ -125,7 +124,7 @@ body {
     z-index: 1;
 }
 
-/* الألوان اللي بتلف (النيون) - تبقى كما هي */
+/* تأثير النيون - يبقى كما هو */
 .card::before {
     content: '';
     position: absolute;
@@ -138,7 +137,6 @@ body {
     z-index: -1;
 }
 
-/* الطبقة الداخلية السوداء - تبقى كما هي */
 .card::after {
     content: '';
     position: absolute;
@@ -148,20 +146,20 @@ body {
     z-index: -1;
 }
 
-/* قسم الصورة - الآن أصبح في جهة اليسار */
+/* قسم الصورة - الآن في جهة اليمين تماماً */
 .profile-side {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-right: 20px;
-    /* مسافة بين الصورة والكلام اللي على يمينها */
     margin-left: 10px;
-    /* إزاحة خفيفة عن حافة البطاقة اليسرى */
+    /* مسافة بين الصورة وحافة البطاقة اليمنى */
+    margin-right: 5px;
     z-index: 5;
 }
 
 .profile-img {
     width: 60px;
+    /* نفس القياس الأصلي */
     height: 60px;
     border-radius: 50%;
     border: 2px solid var(--neon-blue);
@@ -174,11 +172,12 @@ body {
     font-weight: bold;
 }
 
-/* تاغ KICK - يبقى في مكانه أو يمكنك نقله لليمين إذا أردت */
+/* تاغ KICK - نقلناه للزاوية اليسرى */
 .kick-tag {
     position: absolute;
     top: 10px;
-    left: 10px;
+    right: 10px;
+    /* تم التغيير من left إلى right ليكون بالزاوية المقابلة */
     background: #53fc18;
     color: black;
     font-size: 10px;
@@ -188,11 +187,12 @@ body {
     z-index: 10;
 }
 
-/* الكلام والزر - أصبحوا الآن في الجهة اليمنى */
+/* قسم الكلام - بجانب الصورة من اليسار */
 .card-content {
     flex: 1;
-    text-align: left;
-    /* جعل النصوص تبدأ من اليسار لتناسب الترتيب الجديد، أو اتركها right إذا كنت تفضل */
+    text-align: right;
+    /* النصوص محاذاته لليمين لتكون قريبة من الصورة */
+    padding-right: 15px;
     z-index: 5;
 }
 
