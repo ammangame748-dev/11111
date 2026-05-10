@@ -172,12 +172,16 @@ body {
     font-weight: bold;
 }
 
-/* تاغ KICK - نقلناه للزاوية اليسرى */
+/* تاغ KICK - التعديل هنا ليكون بالزاوية فوق الصورة */
 .kick-tag {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    /* تم التغيير من left إلى right ليكون بالزاوية المقابلة */
+    top: 12px;
+    /* المسافة من فوق */
+    right: 12px;
+    /* المسافة من اليمين - هيك صار فوق الصورة بالضبط */
+    left: auto;
+    /* عشان نلغي أي قيمة قديمة لجهة اليسار */
+
     background: #53fc18;
     color: black;
     font-size: 10px;
@@ -186,6 +190,7 @@ body {
     border-radius: 4px;
     z-index: 10;
 }
+
 
 /* قسم الكلام - بجانب الصورة من اليسار */
 .card-content {
