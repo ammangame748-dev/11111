@@ -175,22 +175,22 @@ body {
 .kick-tag {
     position: absolute;
     top: 0;
-    /* لجعلها في أعلى الزاوية تماماً */
+    /* لجعلها تلمس الحافة العلوية تماماً */
     left: 0;
-    /* لجعلها في أقصى اليسار */
+    /* لجعلها تلمس الحافة اليسرى تماماً */
     right: auto;
-    /* إلغاء أي قيم سابقة لجهة اليمين */
 
     background: #53fc18;
     color: black;
     font-size: 10px;
     font-weight: bold;
     padding: 2px 8px;
-    border-radius: 4px 0 4px 0;
-    /* اختيار اختياري: لضبط الحواف مع الزاوية */
+
+    /* تعديل الحواف لتناسب زاوية البطاقة المنحنية */
+    border-radius: 8px 0 8px 0;
+
     z-index: 10;
 }
-
 
 /* قسم الكلام - بجانب الصورة من اليسار */
 .card-content {
