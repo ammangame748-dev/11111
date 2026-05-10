@@ -76,18 +76,26 @@ updateStatus();
 // الصفحة الرئيسية مع معالجة الأخطاء
 app.get('/', async (req, res) => {
     try {
-        const streamers = await Streamer.find({}).sort({ isLive: -1, viewers: -1 }) || [];
+        const streamersData = await Streamer.find({}).sort({ isLive: -1, viewers: -1 }) || [];
+        
         const stats = {
-            totalStreamers: streamers.length || 0,
-            liveNow: streamers.filter(s => s.isLive).length || 0,
-            totalViewers: streamers.reduce((a, b) => a + (b.viewers || 0), 0) || 0
+            totalStreamers: streamersData.length || 0,
+            liveNow: streamersData.filter(s => s.isLive).length || 0,
+            totalViewers: streamersData.reduce((a, b) => a + (b.viewers || 0), 0) || 0
         };
-        res.render('index', { streamers, stats });
+
+        // هون السر: بنبعث البيانات باسم streamers وباسم services عشان يشتغل الكود القديم والجديد
+        res.render('index', { 
+            streamers: streamersData, 
+            services: streamersData, // هذا السطر بيحل مشكلة ReferenceError: services is not defined
+            stats: stats 
+        });
     } catch (err) {
-        console.error("❌ خطأ في عرض الصفحة الرئيسية:", err);
-        res.status(500).send("Internal Server Error: فشل في جلب البيانات من الداتابيز");
+        console.error("❌ خطأ في عرض الصفحة:", err);
+        res.status(500).send("Internal Server Error");
     }
 });
+
 
 // إرسال طلب انضمام
 app.post('/apply', async (req, res) => {
