@@ -108,11 +108,11 @@ body {
     padding: 20px 5%;
 }
 
-/* البطاقة الأساسية */
+/* البطاقة الأساسية - ثابتة 100% */
 .card {
     display: flex;
     flex-direction: row-reverse;
-    /* هاد اللي بيرجع الصورة عاليمين */
+    /* الصورة عاليمين */
     justify-content: space-between;
     align-items: center;
     background: #0f1217;
@@ -121,10 +121,11 @@ body {
     height: 110px;
     position: relative;
     overflow: hidden;
+    /* عشان يقص الألوان اللي بتلف */
     z-index: 1;
 }
 
-/* الألوان اللي بتلف (النيون) */
+/* ✨ الألوان اللي بتلف (النيون) - رجعناها */
 .card::before {
     content: '';
     position: absolute;
@@ -137,36 +138,26 @@ body {
     z-index: -1;
 }
 
-/* الطبقة السوداء الداخلية */
+/* الطبقة السوداء عشان تظهر الحواف فقط */
 .card::after {
     content: '';
     position: absolute;
     inset: 3px;
+    /* سمك الحافة الملونة */
     background: #0f1217;
     border-radius: 10px;
     z-index: -1;
 }
 
-/* تاغ KICK بالزاوية اليسرى فوق */
-.kick-tag {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: #53fc18;
-    color: black;
-    font-size: 10px;
-    font-weight: bold;
-    padding: 2px 8px;
-    border-radius: 4px;
-    z-index: 5;
-}
-
-/* جهة الصورة (بتكون عاليمين بسبب row-reverse) */
+/* قسم الصورة - دفعناه لليمين شوي زي ما طلبت */
 .profile-side {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-left: 10px;
+    margin-right: -5px;
+    /* دفعة صغيرة لليمين عشان تطلع من الحافة شوي */
+    margin-left: 15px;
+    /* ابتعاد عن الكلام */
     z-index: 5;
 }
 
@@ -184,22 +175,25 @@ body {
     font-weight: bold;
 }
 
-/* جهة الكلام (بتكون عاليسار) */
+/* تاغ KICK - ثابت في مكانه بالزاوية */
+.kick-tag {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #53fc18;
+    color: black;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 4px;
+    z-index: 10;
+}
+
+/* الكلام والزر */
 .card-content {
     flex: 1;
     text-align: right;
-    /* الكلام محاذى لليمين داخل منطقته */
-    padding-right: 15px;
     z-index: 5;
-}
-
-.status-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin: 4px 0;
-    justify-content: flex-end;
-    /* لضمان محاذاة الحالة مع النص */
 }
 
 @keyframes rotate-border {
@@ -207,6 +201,7 @@ body {
         transform: rotate(360deg);
     }
 }
+
 
 
 /* تأكيد أن المحتوى فوق الألوان */
