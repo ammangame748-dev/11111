@@ -7,13 +7,13 @@
     <title>Black List Hub</title>
     <link rel="icon" type="image/png" href="/black.png">
     <link rel="stylesheet" href="/style.css">
-    <!-- تأكد من تعديل رابط الفونت أوسوم إذا لزم الأمر -->
+    <!-- مكتبة الأيقونات المهمة للنجوم وغيرها -->
     <link rel="stylesheet" href="https://cloudflare.com">
 </head>
 
 <body>
 
-    <!-- 1. شاشة الترحيب (توضع هنا لتظهر فوق كل شيء فوراً) -->
+    <!-- 1. شاشة الترحيب (Intro) -->
     <div id="welcome-overlay" class="welcome-overlay">
         <div class="intro-card">
             <div class="card-border-animation"></div>
@@ -102,9 +102,9 @@
             <h3 style="margin-bottom:20px;">حسابات عصابة بلاك ليست</h3>
             <div style="display: grid; gap: 10px;">
                 <a href="https://x.com" target="_blank" class="plus-btn"
-                    style="text-decoration:none; background:#1da1f2;">تويتر X</a>
+                    style="text-decoration:none; background:#1da1f2; color:white; border:none;">تويتر X</a>
                 <a href="https://discord.gg" target="_blank" class="plus-btn"
-                    style="text-decoration:none; background:#5865f2;">ديسكورد</a>
+                    style="text-decoration:none; background:#5865f2; color:white; border:none;">ديسكورد</a>
             </div>
             <button onclick="closeSocial()"
                 style="margin-top:20px; background:none; color:gray; border:none; cursor:pointer;">إغلاق</button>
@@ -118,7 +118,7 @@
                 <input type="text" name="kickUser" placeholder="اسمك في Kick" required
                     style="width:100%; padding:10px; margin:10px 0; background:#222; border:none; color:white; border-radius:8px;">
                 <button type="submit" class="plus-btn"
-                    style="width:100%; background:var(--neon-blue); color:black;">إرسال الطلب</button>
+                    style="width:100%; background:var(--neon-blue); color:black; border:none;">إرسال الطلب</button>
                 <button type="button" onclick="closeAddModal()"
                     style="margin-top:15px; background:none; color:gray; border:none; cursor:pointer;">إلغاء</button>
             </form>
@@ -127,68 +127,68 @@
 
     <!-- Scripts -->
     <script>
-
-        // انتظر 7 ثوانٍ ثم ابدأ حركة الخروج
+        // 1. أنميشن شاشة الترحيب والخروج لفوق
         setTimeout(() => {
             const card = document.querySelector('.intro-card');
             const overlay = document.getElementById('welcome-overlay');
 
             if (card && overlay) {
-                // إضافة كلاس الخروج لفوق للبطاقة
-                card.classList.add('fade-out-up');
-
-                // إخفاء الخلفية السوداء بالكامل بعد انتهاء أنميشن البطاقة
+                card.classList.add('fade-out-up'); // أنميشن الطيران لفوق
                 setTimeout(() => {
                     overlay.style.opacity = '0';
                     overlay.style.transition = 'opacity 0.8s ease';
                     setTimeout(() => {
                         overlay.style.display = 'none';
                     }, 800);
-                }, 500); // تأخير بسيط ليعطي جمالية للحركة
+                }, 500);
             }
-        }, 7000);
-    </script>
+        }, 5000); // خليتها 5 ثواني عشان ما تزهق الناس
 
+        // 2. وظائف المودالات والمفضلة والفلترة
+        function openSocial() { document.getElementById('socialModal').style.display = 'flex'; }
+        function closeSocial() { document.getElementById('socialModal').style.display = 'none'; }
+        function openAddModal() { document.getElementById('addModal').style.display = 'flex'; }
+        function closeAddModal() { document.getElementById('addModal').style.display = 'none'; }
 
-    // 2. وظائف المودالات والمفضلة
-    function openSocial() { document.getElementById('socialModal').style.display = 'flex'; }
-    function closeSocial() { document.getElementById('socialModal').style.display = 'none'; }
-    function openAddModal() { document.getElementById('addModal').style.display = 'flex'; }
-    function closeAddModal() { document.getElementById('addModal').style.display = 'none'; }
+        function toggleFav(user) {
+            let favs = JSON.parse(localStorage.getItem('bl_favs')) || [];
+            const index = favs.indexOf(user);
+            index > -1 ? favs.splice(index, 1) : favs.push(user);
+            localStorage.setItem('bl_favs', JSON.stringify(favs));
+            updateStars();
+        }
 
-    function toggleFav(user) {
-    let favs = JSON.parse(localStorage.getItem('bl_favs')) || [];
-    const index = favs.indexOf(user);
-    index > -1 ? favs.splice(index, 1) : favs.push(user);
-    localStorage.setItem('bl_favs', JSON.stringify(favs));
-    updateStars();
-    }
+        function updateStars() {
+            let favs = JSON.parse(localStorage.getItem('bl_favs')) || [];
+            document.querySelectorAll('.card').forEach(c => {
+                const user = c.id.replace('card-', '');
+                const starBtn = c.querySelector('.star-btn');
+                if (starBtn) starBtn.classList.toggle('active', favs.includes(user));
+            });
+        }
 
-    function updateStars() {
-    let favs = JSON.parse(localStorage.getItem('bl_favs')) || [];
-    document.querySelectorAll('.card').forEach(c => {
-    const user = c.id.replace('card-', '');
-    c.querySelector('.star-btn').classList.toggle('active', favs.includes(user));
-    });
-    }
+        function runFilter(val) {
+            const cards = Array.from(document.querySelectorAll('.card'));
+            const favs = JSON.parse(localStorage.getItem('bl_favs')) || [];
+            const grid = document.getElementById('mainGrid');
+            cards.forEach(c => {
+                c.style.display = 'flex';
+                const user = c.id.replace('card-', '');
+                if (val === 'live' && c.dataset.live === 'false') c.style.display = 'none';
+                if (val === 'offline' && c.dataset.live === 'true') c.style.display = 'none';
+                if (val === 'fav' && !favs.includes(user)) c.style.display = 'none';
+            });
+            if (val === 'high') {
+                cards.sort((a, b) => b.dataset.viewers - a.dataset.viewers);
+                grid.innerHTML = ""; cards.forEach(c => grid.appendChild(c));
+            }
+            if (val === 'all') {
+                cards.sort((a, b) => b.dataset.live.localeCompare(a.dataset.live));
+                grid.innerHTML = ""; cards.forEach(c => grid.appendChild(c));
+            }
+        }
 
-    function runFilter(val) {
-    const cards = Array.from(document.querySelectorAll('.card'));
-    const favs = JSON.parse(localStorage.getItem('bl_favs')) || [];
-    const grid = document.getElementById('mainGrid');
-    cards.forEach(c => {
-    c.style.display = 'flex';
-    const user = c.id.replace('card-', '');
-    if (val === 'live' && c.dataset.live === 'false') c.style.display = 'none';
-    if (val === 'offline' && c.dataset.live === 'true') c.style.display = 'none';
-    if (val === 'fav' && !favs.includes(user)) c.style.display = 'none';
-    });
-    if (val === 'high') {
-    cards.sort((a, b) => b.dataset.viewers - a.dataset.viewers);
-    grid.innerHTML = ""; cards.forEach(c => grid.appendChild(c));
-    }
-    }
-    window.onload = updateStars;
+        window.onload = updateStars;
     </script>
 </body>
 
