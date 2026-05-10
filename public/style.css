@@ -108,11 +108,11 @@ body {
     padding: 20px 5%;
 }
 
-/* البطاقة الأساسية - ثابتة 100% */
+/* البطاقة الأساسية - ترتيب من اليسار لليمين */
 .card {
     display: flex;
-    flex-direction: row-reverse;
-    /* الصورة عاليمين */
+    flex-direction: row;
+    /* الصورة عاليسار والكلام عاليمين */
     justify-content: space-between;
     align-items: center;
     background: #0f1217;
@@ -121,11 +121,10 @@ body {
     height: 110px;
     position: relative;
     overflow: hidden;
-    /* عشان يقص الألوان اللي بتلف */
     z-index: 1;
 }
 
-/* ✨ الألوان اللي بتلف (النيون) - رجعناها */
+/* الألوان اللي بتلف (النيون) */
 .card::before {
     content: '';
     position: absolute;
@@ -138,25 +137,24 @@ body {
     z-index: -1;
 }
 
-/* الطبقة السوداء عشان تظهر الحواف فقط */
+/* الطبقة الداخلية السوداء */
 .card::after {
     content: '';
     position: absolute;
     inset: 3px;
-    /* سمك الحافة الملونة */
     background: #0f1217;
     border-radius: 10px;
     z-index: -1;
 }
 
-/* قسم الصورة - دفعناه لليمين شوي زي ما طلبت */
+/* قسم الصورة - دفعناه لليسار شوي زي ما طلبت */
 .profile-side {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-right: -5px;
-    /* دفعة صغيرة لليمين عشان تطلع من الحافة شوي */
-    margin-left: 15px;
+    margin-left: 5px;
+    /* دفع الصورة لليسار قليلاً */
+    margin-right: 15px;
     /* ابتعاد عن الكلام */
     z-index: 5;
 }
@@ -175,7 +173,7 @@ body {
     font-weight: bold;
 }
 
-/* تاغ KICK - ثابت في مكانه بالزاوية */
+/* تاغ KICK بالزاوية اليسرى فوق */
 .kick-tag {
     position: absolute;
     top: 10px;
@@ -189,7 +187,7 @@ body {
     z-index: 10;
 }
 
-/* الكلام والزر */
+/* الكلام والزر بالجهة اليمنى */
 .card-content {
     flex: 1;
     text-align: right;
