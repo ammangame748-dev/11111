@@ -108,12 +108,13 @@ body {
     padding: 20px 5%;
 }
 
-/* البطاقة الأساسية - ترتيب من اليسار لليمين */
+/* البطاقة الأساسية - التعديل هنا لجعل العناصر تبدأ من اليسار */
 .card {
     display: flex;
     flex-direction: row;
-    /* الصورة عاليسار والكلام عاليمين */
-    justify-content: space-between;
+    /* العناصر تترتب أفقياً */
+    justify-content: flex-start;
+    /* تبدأ من اليسار */
     align-items: center;
     background: #0f1217;
     border-radius: 12px;
@@ -124,7 +125,7 @@ body {
     z-index: 1;
 }
 
-/* الألوان اللي بتلف (النيون) */
+/* الألوان اللي بتلف (النيون) - تبقى كما هي */
 .card::before {
     content: '';
     position: absolute;
@@ -137,7 +138,7 @@ body {
     z-index: -1;
 }
 
-/* الطبقة الداخلية السوداء */
+/* الطبقة الداخلية السوداء - تبقى كما هي */
 .card::after {
     content: '';
     position: absolute;
@@ -147,15 +148,15 @@ body {
     z-index: -1;
 }
 
-/* قسم الصورة - دفعناه لليسار شوي زي ما طلبت */
+/* قسم الصورة - الآن أصبح في جهة اليسار */
 .profile-side {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-left: 5px;
-    /* دفع الصورة لليسار قليلاً */
-    margin-right: 15px;
-    /* ابتعاد عن الكلام */
+    margin-right: 20px;
+    /* مسافة بين الصورة والكلام اللي على يمينها */
+    margin-left: 10px;
+    /* إزاحة خفيفة عن حافة البطاقة اليسرى */
     z-index: 5;
 }
 
@@ -173,7 +174,7 @@ body {
     font-weight: bold;
 }
 
-/* تاغ KICK بالزاوية اليسرى فوق */
+/* تاغ KICK - يبقى في مكانه أو يمكنك نقله لليمين إذا أردت */
 .kick-tag {
     position: absolute;
     top: 10px;
@@ -187,10 +188,11 @@ body {
     z-index: 10;
 }
 
-/* الكلام والزر بالجهة اليمنى */
+/* الكلام والزر - أصبحوا الآن في الجهة اليمنى */
 .card-content {
     flex: 1;
-    text-align: right;
+    text-align: left;
+    /* جعل النصوص تبدأ من اليسار لتناسب الترتيب الجديد، أو اتركها right إذا كنت تفضل */
     z-index: 5;
 }
 
@@ -199,7 +201,6 @@ body {
         transform: rotate(360deg);
     }
 }
-
 
 
 /* تأكيد أن المحتوى فوق الألوان */
