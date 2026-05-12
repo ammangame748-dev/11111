@@ -43,14 +43,16 @@ async function updateStatus() {
         console.log("🔄 جاري تحديث حالة البث...");
         for (const streamer of streamers) {
             try {
-                const username = streamer.kickUsername.toLowerCase().trim();
-                const res = await axios.get(`https://kick.com/api/v2/channels/${username}`, {
-                    timeout: 5000,
+                const res = await axios.get(`https://kick.com{username}`, {
+                    timeout: 10000,
                     headers: {
-                        "User-Agent": "Mozilla/5.0",
-                        "Accept": "application/json"
+                        "accept": "application/json",
+                        "accept-language": "en-US,en;q=0.9,ar;q=0.8",
+                        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+                        "referer": "https://kick.com"
                     }
                 });
+
 
                 const data = res.data;
                 const isLive = !!data.livestream;
