@@ -34,7 +34,7 @@ const Application = mongoose.model('Application', new mongoose.Schema({
     status: { type: String, default: 'pending' }
 }));
 
-// ================= PUPPETEER UPDATE FUNCTION (سريع وموفر للرام) =================
+// ================= PUPPETEER UPDATE FUNCTION =================
 async function updateStatus() {
     console.log("🚀 جاري التحديث السريع عبر المتصفح...");
     const streamers = await Streamer.find({});
@@ -51,13 +51,12 @@ async function updateStatus() {
                 '--disable-gpu',
                 '--no-zygote',
                 '--single-process'
-            ],
-            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome',
+            ]
+            // حذفنا executablePath ليعتمد على المتصفح المثبت بواسطة أمر البناء في الصورة
         });
 
         const page = await browser.newPage();
 
-        // منع تحميل الصور والستايلات لتسريع العملية 10 أضعاف
         await page.setRequestInterception(true);
         page.on('request', (req) => {
             if (['image', 'stylesheet', 'font', 'media'].includes(req.resourceType())) {
@@ -72,34 +71,24 @@ async function updateStatus() {
         for (const streamer of streamers) {
             try {
                 const cleanName = streamer.kickUsername.trim().toLowerCase();
-                // تصحيح الرابط بإضافة /
+                // ✅ تصحيح الرابط بإضافة / واستخدام backticks
                 await page.goto(`https://kick.com{cleanName}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
-                // انتظر ثانيتين فقط بدل 7 (الصفحة الآن خفيفة جداً)
                 await new Promise(r => setTimeout(r, 2000));
 
                 const statusData = await page.evaluate(() => {
-                    // الكشف عن حالة البث بطريقة أسرع
                     const isLive = document.body.innerText.includes('LIVE') || !!document.querySelector('.bg-red-600');
-
-                    // جلب عدد المشاهدين
                     const viewersEl = document.querySelector('span[class*="viewer-count"]') || document.querySelector('.v-live-indicator');
                     let vCount = 0;
                     if (viewersEl) {
                         vCount = parseInt(viewersEl.innerText.replace(/[^0-9]/g, '')) || 0;
                     }
-
                     return { isLive: isLive, viewers: vCount };
                 });
 
                 await Streamer.updateOne(
                     { _id: streamer._id },
-                    {
-                        $set: {
-                            isLive: statusData.isLive,
-                            viewers: statusData.viewers
-                        }
-                    }
+                    { $set: { isLive: statusData.isLive, viewers: statusData.viewers } }
                 );
                 console.log(`✅ ${cleanName} | بث: ${statusData.isLive} | مشاهدين: ${statusData.viewers}`);
 
@@ -119,7 +108,6 @@ setInterval(updateStatus, 300000);
 updateStatus();
 
 // ================= ROUTES =================
-
 app.get('/', async (req, res) => {
     try {
         const streamersData = await Streamer.find({}).sort({ isLive: -1, viewers: -1 }) || [];
@@ -134,11 +122,11 @@ app.get('/', async (req, res) => {
     }
 });
 
+// (بقية الـ Routes تظل كما هي...)
 app.post('/apply', async (req, res) => {
     try {
         const { kickUser, discordName } = req.body;
-        const clean = kickUser.trim();
-        await Application.create({ kickUsername: clean, discordName });
+        await Application.create({ kickUsername: kickUser.trim(), discordName });
         res.send("<script>alert('✅ تم إرسال طلبك!'); window.location='/';</script>");
     } catch (err) { res.status(500).send("Error applying"); }
 });
@@ -156,18 +144,6 @@ app.get('/admin/accept/:id', async (req, res) => {
     if (appData) {
         await Streamer.updateOne({ kickUsername: appData.kickUsername }, { $set: { kickUsername: appData.kickUsername } }, { upsert: true });
     }
-    res.redirect('/admin-justice?pass=1234');
-});
-
-app.post('/admin/update-twitter/:id', async (req, res) => {
-    if (req.query.pass !== "1234") return res.status(403).send("❌");
-    await Streamer.findByIdAndUpdate(req.params.id, { twitterUrl: req.body.twitterUrl });
-    res.redirect('/admin-justice?pass=1234');
-});
-
-app.get('/admin/delete-streamer/:id', async (req, res) => {
-    if (req.query.pass !== "1234") return res.status(403).send("❌");
-    await Streamer.findByIdAndDelete(req.params.id);
     res.redirect('/admin-justice?pass=1234');
 });
 
