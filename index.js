@@ -1,10 +1,9 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const puppeteer = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+const axios = require('axios');
+
 
 const app = express();
-puppeteer.use(StealthPlugin());
 
 // الإعدادات الأساسية
 app.set('view engine', 'ejs');
@@ -34,103 +33,47 @@ const Application = mongoose.model('Application', new mongoose.Schema({
     status: { type: String, default: 'pending' }
 }));
 
-// ================= PUPPETEER UPDATE FUNCTION (سريع وموفر للرام) =================
 async function updateStatus() {
-    console.log("🚀 جاري التحديث السريع عبر المتصفح...");
+    console.log("🚀 جاري تحديث بيانات الستريمرز...");
+
     const streamers = await Streamer.find({});
     if (streamers.length === 0) return;
 
-    let browser;
-    try {
-        browser = await puppeteer.launch({
-            headless: "new",
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-gpu',
-                '--no-zygote',
-                '--single-process'
-            ],
-           executablePath: puppeteer.executablePath(),
-        });
+    for (const streamer of streamers) {
 
-        const page = await browser.newPage();
+        try {
 
-        // منع تحميل الصور والستايلات لتسريع العملية 10 أضعاف
-        await page.setRequestInterception(true);
-        page.on('request', (req) => {
-            if (['image', 'stylesheet', 'font', 'media'].includes(req.resourceType())) {
-                req.abort();
-            } else {
-                req.continue();
-            }
-        });
+            const cleanName = streamer.kickUsername.trim().toLowerCase();
 
-        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            const response = await axios.get(`https://kick.com/api/v1/channels/${cleanName}`);
 
-        for (const streamer of streamers) {
-            try {
-                const cleanName = streamer.kickUsername.trim().toLowerCase();
-                // تصحيح الرابط بإضافة /
-                await page.goto(`https://kick.com/${cleanName}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+            const data = response.data;
 
-                // انتظر ثانيتين فقط بدل 7 (الصفحة الآن خفيفة جداً)
-                await new Promise(r => setTimeout(r, 5000));
+            const isLive = !!data.livestream;
 
-                const statusData = await page.evaluate(() => {
+            const viewers = data.livestream?.viewer_count || 0;
 
-                    const text = document.body.innerText || "";
+            const profilePic =
+                data.user?.profile_pic ||
+                data.user?.profile?.avatar ||
+                "";
 
-                    // حالة البث
-                    const isLive =
-                        text.includes("LIVE") ||
-                        !!document.querySelector('[class*="live"]') ||
-                        !!document.querySelector('.bg-red-600');
-
-                    // المشاهدين
-                    let viewers = 0;
-
-                    const viewerText =
-                        document.querySelector('[data-testid="viewer-count"]')?.innerText ||
-                        document.querySelector('.vjs-live-control')?.innerText ||
-                        "";
-
-                    viewers = parseInt(viewerText.replace(/[^0-9]/g, "")) || 0;
-
-                    // صورة الحساب
-                    const profilePic =
-                        document.querySelector('img[alt*="avatar"]')?.src ||
-                        document.querySelector('img')?.src ||
-                        "";
-
-                    return {
+            await Streamer.updateOne(
+                { _id: streamer._id },
+                {
+                    $set: {
                         isLive,
                         viewers,
                         profilePic
-                    };
-                });
-
-                await Streamer.updateOne(
-                    { _id: streamer._id },
-                    {
-                        $set: {
-                            isLive: statusData.isLive,
-                            viewers: statusData.viewers,
-                            profilePic: statusData.profilePic
-                        }
                     }
-                );
-                console.log(`✅ ${cleanName} | بث: ${statusData.isLive} | مشاهدين: ${statusData.viewers}`);
+                }
+            );
 
-            } catch (err) {
-                console.error(`❌ خطأ في ${streamer.kickUsername}:`, err.message);
-            }
+            console.log(`✅ ${cleanName} | LIVE: ${isLive} | VIEWERS: ${viewers}`);
+
+        } catch (err) {
+            console.log(`❌ ${streamer.kickUsername}: ${err.message}`);
         }
-    } catch (error) {
-        console.error("❌ خطأ متصفح رئيسي:", error.message);
-    } finally {
-        if (browser) await browser.close();
     }
 }
 
