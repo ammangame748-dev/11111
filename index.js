@@ -34,28 +34,29 @@ const Application = mongoose.model('Application', new mongoose.Schema({
     status: { type: String, default: 'pending' }
 }));
 
-// ================= FUNCTIONS =================
 async function updateStatus() {
     try {
         const streamers = await Streamer.find({});
         if (streamers.length === 0) return;
 
-        console.log("🔄 جاري تحديث حالة البث...");
+        console.log("🔄 جاري محاولة تحديث البيانات...");
         for (const streamer of streamers) {
             try {
+                const username = streamer.kickUsername.toLowerCase().trim();
+
+                // استخدام رابط الـ API v1 وتغيير الـ Headers بالكامل
                 const res = await axios.get(`https://kick.com{username}`, {
-                    timeout: 10000,
+                    timeout: 8000,
                     headers: {
-                        "accept": "application/json",
-                        "accept-language": "en-US,en;q=0.9,ar;q=0.8",
-                        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
-                        "referer": "https://kick.com"
+                        'accept': 'application/json',
+                        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        'x-requested-with': 'XMLHttpRequest'
                     }
                 });
 
-
                 const data = res.data;
-                const isLive = !!data.livestream;
+                // في v1 التقسيمة بتختلف شوي:
+                const isLive = data.livestream !== null;
                 const viewers = isLive ? data.livestream.viewer_count : 0;
                 const profilePic = data.user?.profile_pic || data.user?.avatar || null;
 
@@ -63,12 +64,13 @@ async function updateStatus() {
                     { _id: streamer._id },
                     { $set: { isLive, viewers, profilePic } }
                 );
+                console.log(`✅ تم تحديث: ${username}`);
             } catch (err) {
-                console.error(`❌ خطأ في جلب بيانات ${streamer.kickUsername}`);
+                console.error(`❌ حظر من Kick لـ ${streamer.kickUsername} (Status: ${err.response?.status || 'Timeout'})`);
             }
         }
     } catch (err) {
-        console.error("❌ فشل تحديث البيانات العامة:", err.message);
+        console.error("❌ فشل عام:", err.message);
     }
 }
 
