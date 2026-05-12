@@ -18,12 +18,15 @@ mongoose.connect(MONGO_URI)
     .catch(err => console.error('❌ خطأ في الاتصال بالداتابيز:', err));
 
 // ================= MODELS =================
+
 const Streamer = mongoose.model('KickConfig', new mongoose.Schema({
     kickUsername: String,
+    twitterUrl: { type: String, default: '' }, // إضافة رابط تويتر
     isLive: { type: Boolean, default: false },
     viewers: { type: Number, default: 0 },
     profilePic: String
 }));
+
 
 const Application = mongoose.model('Application', new mongoose.Schema({
     kickUsername: String,
@@ -48,7 +51,7 @@ async function updateStatus() {
                         "Accept": "application/json"
                     }
                 });
-                
+
                 const data = res.data;
                 const isLive = !!data.livestream;
                 const viewers = isLive ? data.livestream.viewer_count : 0;
@@ -77,7 +80,7 @@ updateStatus();
 app.get('/', async (req, res) => {
     try {
         const streamersData = await Streamer.find({}).sort({ isLive: -1, viewers: -1 }) || [];
-        
+
         const stats = {
             totalStreamers: streamersData.length || 0,
             liveNow: streamersData.filter(s => s.isLive).length || 0,
@@ -85,10 +88,10 @@ app.get('/', async (req, res) => {
         };
 
         // هون السر: بنبعث البيانات باسم streamers وباسم services عشان يشتغل الكود القديم والجديد
-        res.render('index', { 
-            streamers: streamersData, 
+        res.render('index', {
+            streamers: streamersData,
             services: streamersData, // هذا السطر بيحل مشكلة ReferenceError: services is not defined
-            stats: stats 
+            stats: stats
         });
     } catch (err) {
         console.error("❌ خطأ في عرض الصفحة:", err);
@@ -161,6 +164,12 @@ app.get('/admin/delete-streamer/:id', async (req, res) => {
     } catch (err) {
         res.send("خطأ في الحذف");
     }
+});
+app.post('/admin/update-twitter/:id', async (req, res) => {
+    if (req.query.pass !== "1234") return res.status(403).send("❌");
+    const { twitterUrl } = req.body;
+    await Streamer.findByIdAndUpdate(req.params.id, { twitterUrl });
+    res.redirect('/admin-justice?pass=1234');
 });
 
 // ================= SERVER =================
