@@ -97,24 +97,31 @@
                                 <span class="offline-text">OFFLINE</span>
                                 <% } %>
                     </div>
-                    <!-- زر الملف الشخصي الجديد -->
-                    <!-- زر الملف الشخصي -->
+
+                    <!-- زر الملف الشخصي المعدل ليدعم الرابط اليدوي -->
+                    <!-- السطر المعدل -->
                     <button
-                        onclick="openProfile('<%= streamer.kickUsername %>', '<%= streamer.twitterUrl %>', '<%= streamer.profilePic %>')"
+                        onclick="openProfile('<%= streamer.kickUsername %>', '<%= streamer.twitterUrl %>', '<%= streamer.profilePic %>', '<%= streamer.kickUrl %>')"
                         class="watch-btn"
                         style="background: #222; color: #fff; margin-bottom: 8px; border: 1px solid #444;">
                         👤 الملف الشخصي
                     </button>
 
-                    <% if(streamer.isLive) { %>
-                        <a href="https://kick.com/<%= streamer.kickUsername.trim() %>" target="_blank"
-                            class="watch-btn">دخول البث</a>
+
+                    <!-- أزرار الدخول: تفحص إذا في رابط يدوي من الأدمن أولاً -->
+                    <% if(streamer.kickUrl && streamer.kickUrl.trim() !=='' ) { %>
+                        <a href="<%= streamer.kickUrl.trim() %>" target="_blank"
+                            class="watch-btn <%= streamer.isLive ? '' : 'offline' %>">
+                            <%= streamer.isLive ? 'دخول البث' : 'زيارة القناة' %>
+                        </a>
                         <% } else { %>
                             <a href="https://kick.com/<%= streamer.kickUsername.trim() %>" target="_blank"
-                                class="watch-btn offline">زيارة القناة</a>
+                                class="watch-btn <%= streamer.isLive ? '' : 'offline' %>">
+                                <%= streamer.isLive ? 'دخول البث' : 'زيارة القناة' %>
+                            </a>
                             <% } %>
 
-                </div> <!-- إغلاق card-content -->
+                </div> <!-- إغلاق card-content المظبوط -->
 
                 <!-- نجمة المفضلة -->
                 <i class="fas fa-star star-btn" onclick="toggleFav('<%= streamer.kickUsername %>')"></i>
@@ -237,10 +244,13 @@
     </div>
 
     <script>
-        function openProfile(name, twitter, img) {
+        function openProfile(name, twitter, img, kickUrl) {
             document.getElementById('p-name').innerText = name;
             document.getElementById('p-img').src = img || '/black.png';
-            document.getElementById('p-kick').href = 'https://kick.com' + name;
+
+            // هاد السطر هو اللي بحل مشكلة الرابط
+            const finalKickUrl = (kickUrl && kickUrl.trim() !== '') ? kickUrl : 'https://kick.com' + name.trim();
+            document.getElementById('p-kick').href = finalKickUrl;
 
             const twBtn = document.getElementById('p-twitter');
             if (twitter && twitter.trim() !== '') {
@@ -251,6 +261,7 @@
             }
             document.getElementById('profileModal').style.display = 'flex';
         }
+
     </script>
 
 </body>

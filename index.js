@@ -28,12 +28,14 @@ const Streamer = mongoose.model(
     'KickConfig',
     new mongoose.Schema({
         kickUsername: String,
+        kickUrl: { type: String, default: '' }, // الرابط الكامل هنا
         twitterUrl: { type: String, default: '' },
         isLive: { type: Boolean, default: false },
         viewers: { type: Number, default: 0 },
         profilePic: String
     })
 );
+
 
 const Application = mongoose.model(
     'Application',
@@ -166,16 +168,18 @@ app.get('/admin/accept/:id', async (req, res) => {
 
     res.redirect('/admin-justice?pass=1234');
 });
-
-app.post('/admin/update-twitter/:id', async (req, res) => {
+// البحث عن المسار القديم واستبداله بهذا
+app.post('/admin/update-links/:id', async (req, res) => {
     if (req.query.pass !== "1234") return res.status(403).send("❌");
 
     await Streamer.findByIdAndUpdate(req.params.id, {
-        twitterUrl: req.body.twitterUrl
+        twitterUrl: req.body.twitterUrl,
+        kickUrl: req.body.kickUrl // ستحتاج لإضافة kickUrl للموديل كما شرحنا سابقاً
     });
 
     res.redirect('/admin-justice?pass=1234');
 });
+
 
 app.get('/admin/delete-streamer/:id', async (req, res) => {
     if (req.query.pass !== "1234") return res.status(403).send("❌");
