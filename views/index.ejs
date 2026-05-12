@@ -98,6 +98,7 @@
                                 <% } %>
                     </div>
                     <!-- زر الملف الشخصي الجديد -->
+                    <!-- زر الملف الشخصي -->
                     <button
                         onclick="openProfile('<%= streamer.kickUsername %>', '<%= streamer.twitterUrl %>', '<%= streamer.profilePic %>')"
                         class="watch-btn"
@@ -106,16 +107,14 @@
                     </button>
 
                     <% if(streamer.isLive) { %>
-                        <!-- الجزء القديم -->
-                        <% if(streamer.isLive) { %>
-                            <a href="https://kick.com/<%= streamer.kickUsername %>" target="_blank"
-                                class="watch-btn">دخول البث</a>
-                            <% } else { %>
-                                <a href="https://kick.com/<%= streamer.kickUsername %>" target="_blank"
-                                    class="watch-btn offline">زيارة القناة</a>
-                                <% } %>
+                        <a href="https://kick.com/<%= streamer.kickUsername.trim() %>" target="_blank"
+                            class="watch-btn">دخول البث</a>
+                        <% } else { %>
+                            <a href="https://kick.com/<%= streamer.kickUsername.trim() %>" target="_blank"
+                                class="watch-btn offline">زيارة القناة</a>
+                            <% } %>
 
-                </div>
+                </div> <!-- إغلاق card-content -->
 
                 <!-- نجمة المفضلة -->
                 <i class="fas fa-star star-btn" onclick="toggleFav('<%= streamer.kickUsername %>')"></i>
