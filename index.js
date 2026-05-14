@@ -1,196 +1,113 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const axios = require('axios');
-const path = require('path'); // إضافة مكتبة المسارات
+const path = require('path');
 
 const app = express();
 
-// ================= الإعدادات المحدثة =================
+// ================= الإعدادات الأساسية =================
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views')); // تحديد مجلد القوالب بدقة
-app.use(express.static(path.join(__dirname, 'public'))); // تحديد مجلد الملفات العامة بدقة
+app.set('views', path.join(__dirname, 'views'));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+// ================= الاتصال بقاعدة البيانات =================
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://hsamhmaydh4_db_user:xls5Av4Nr4a5PA7W@cluster0.wjnh8d0.mongodb.net/BlackListDB?retryWrites=true&w=majority";
 
-// ================= DATABASE =================
-const MONGO_URI =
-    process.env.MONGO_URI ||
-    "mongodb+srv://hsamhmaydh4_db_user:xls5Av4Nr4a5PA7W@cluster0.wjnh8d0.mongodb.net/BlackListDB?retryWrites=true&w=majority&appName=Cluster0";
+mongoose.connect(MONGO_URI)
+    .then(() => console.log('✅ متصل بقاعدة البيانات بنجاح'))
+    .catch(err => console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err));
 
-mongoose
-    .connect(MONGO_URI)
-    .then(() => console.log('✅ متصل بالداتابيز بنجاح'))
-    .catch(err => console.error('❌ خطأ في الاتصال بالداتابيز:', err));
+// ================= الموديل (بيانات الستريمرز فقط) =================
+const Streamer = mongoose.model('KickConfig', new mongoose.Schema({
+    kickUsername: { type: String, required: true, unique: true },
+    isLive: { type: Boolean, default: false },
+    profilePic: { type: String, default: '' }
+}));
 
-// ================= MODELS =================
-const Streamer = mongoose.model(
-    'KickConfig',
-    new mongoose.Schema({
-        kickUsername: String,
-        kickUrl: { type: String, default: '' }, // الرابط الكامل هنا
-        twitterUrl: { type: String, default: '' },
-        isLive: { type: Boolean, default: false },
-        viewers: { type: Number, default: 0 },
-        profilePic: String
-    })
-);
+// ================= دالة جلب الحالة والصورة من كيك =================
+let isUpdating = false;
 
+async function updateKickStatus() {
+    if (isUpdating) return;
+    isUpdating = true;
+    console.log("🚀 جاري فحص حالة البث وتحديث صور الستريمرز...");
 
-const Application = mongoose.model(
-    'Application',
-    new mongoose.Schema({
-        kickUsername: String,
-        discordName: String,
-        status: { type: String, default: 'pending' }
-    })
-);
+    try {
+        const streamers = await Streamer.find({});
 
-// ================= UPDATE STREAMERS =================
-async function updateStatus() {
-    console.log("🚀 جاري تحديث بيانات الستريمرز...");
+        for (const streamer of streamers) {
+            try {
+                const cleanName = streamer.kickUsername.trim().toLowerCase();
 
-    const streamers = await Streamer.find({});
-    if (!streamers.length) return;
-
-    for (const streamer of streamers) {
-        try {
-            const cleanName = streamer.kickUsername.trim().toLowerCase();
-
-            const response = await axios.get(
-                `https://kick.com/api/v1/channels/${cleanName}`,
-                {
+                // محاكاة تصفح حقيقي لتجاوز الحظر والأخطاء
+                const response = await axios.get(`https://kick.com/api/v1/channels/${cleanName}`, {
                     headers: {
-                        "User-Agent":
-                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
-                        Accept: "application/json",
-                        Referer: "https://kick.com/"
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+                        "Accept": "application/json",
+                        "Referer": "https://kick.com/"
                     },
                     timeout: 10000
-                }
-            );
+                });
 
-            const data = response.data;
+                const data = response.data;
+                const isLive = !!data.livestream; // True إذا كان هناك بث مباشر حالي، خلاف ذلك False
+                const profilePic = data.user?.profile_pic || data.user?.profile?.avatar || "";
 
-            const isLive = !!data.livestream;
-            const viewers = data.livestream?.viewer_count || 0;
+                // تحديث الصورة وحالة البث فقط داخل قاعدة البيانات
+                await Streamer.updateOne(
+                    { _id: streamer._id },
+                    { $set: { isLive, profilePic } }
+                );
 
-            const profilePic =
-                data.user?.profile_pic ||
-                data.user?.profile?.avatar ||
-                "";
+                console.log(`✅ الستريمر: ${cleanName} | البث: ${isLive ? "🔴 فاتح" : "⚫ مغلق"}`);
 
-            await Streamer.updateOne(
-                { _id: streamer._id },
-                {
-                    $set: {
-                        isLive,
-                        viewers,
-                        profilePic
-                    }
-                }
-            );
+            } catch (err) {
+                console.log(`❌ فشل جلب بيانات المستحدم (${streamer.kickUsername}): ${err.message}`);
+            }
 
-            console.log(`✅ ${cleanName} | LIVE: ${isLive} | VIEWERS: ${viewers}`);
-        } catch (err) {
-            console.log(`❌ ${streamer.kickUsername}: ${err.message}`);
+            // تأخير 1.5 ثانية لحماية السيرفر من الحظر
+            await new Promise(r => setTimeout(r, 1500));
         }
-
-        // حماية من الحظر / الضغط
-        await new Promise(r => setTimeout(r, 1000));
+    } catch (globalErr) {
+        console.error("❌ خطأ عام في التحديث:", globalErr.message);
+    } finally {
+        isUpdating = false;
     }
 }
 
-// تحديث كل 5 دقائق
-setInterval(updateStatus, 300000);
-updateStatus();
+// الفحص التلقائي (كل 5 دقائق) وتشغيل فوري عند الإقلاع
+setInterval(updateKickStatus, 300000);
+setTimeout(updateKickStatus, 5000);
 
-// ================= ROUTES =================
+// ================= المسارات (Routes) =================
+
+// 1. الصفحة الرئيسية لعرض الستريمرز وحالتهم
 app.get('/', async (req, res) => {
     try {
-        const streamersData = await Streamer.find({})
-            .sort({ isLive: -1, viewers: -1 });
-
-        const stats = {
-            totalStreamers: streamersData.length,
-            liveNow: streamersData.filter(s => s.isLive).length,
-            totalViewers: streamersData.reduce((a, b) => a + (b.viewers || 0), 0)
-        };
-
-        res.render('index', {
-            streamers: streamersData,
-            services: streamersData,
-            stats
-        });
+        // ترتيب الترتيب: الفاتح بث أولاً
+        const streamersData = await Streamer.find({}).sort({ isLive: -1 });
+        res.render('index', { streamers: streamersData });
     } catch (err) {
-        res.status(500).send("Error loading home page");
+        res.status(500).send("خطأ في تحميل الصفحة الرئيسية");
     }
 });
 
-app.post('/apply', async (req, res) => {
+// 2. مسار بسيط لإضافة ستريمر جديد للتجربة الفورية
+app.post('/add-streamer', async (req, res) => {
     try {
-        const { kickUser, discordName } = req.body;
+        const { username } = req.body;
+        if (!username) return res.status(400).send("الاسم مطلوب");
 
-        const clean = kickUser.trim();
-
-        await Application.create({
-            kickUsername: clean,
-            discordName
-        });
-
-        res.send("<script>alert('✅ تم إرسال طلبك!'); window.location='/';</script>");
+        await Streamer.create({ kickUsername: username.trim() });
+        res.send("<script>alert('تم إضافة الستريمر، سيتم تحديث حالته وصورته خلال ثوانٍ!'); window.location='/';</script>");
+        setTimeout(updateKickStatus, 1000); // تحديث فوري بعد الإضافة
     } catch (err) {
-        res.status(500).send("Error applying");
+        res.status(500).send("الستريمر مضاف مسبقاً أو حدث خطأ");
     }
 });
 
-app.get('/admin-justice', async (req, res) => {
-    if (req.query.pass !== "1234") return res.status(403).send("❌");
-
-    const apps = await Application.find({ status: 'pending' });
-    const streamers = await Streamer.find({});
-
-    res.render('admin', { apps, streamers });
-});
-
-app.get('/admin/accept/:id', async (req, res) => {
-    if (req.query.pass !== "1234") return res.status(403).send("❌");
-
-    const appData = await Application.findByIdAndDelete(req.params.id);
-
-    if (appData) {
-        await Streamer.updateOne(
-            { kickUsername: appData.kickUsername },
-            { $set: { kickUsername: appData.kickUsername } },
-            { upsert: true }
-        );
-    }
-
-    res.redirect('/admin-justice?pass=1234');
-});
-// البحث عن المسار القديم واستبداله بهذا
-app.post('/admin/update-links/:id', async (req, res) => {
-    if (req.query.pass !== "1234") return res.status(403).send("❌");
-
-    await Streamer.findByIdAndUpdate(req.params.id, {
-        twitterUrl: req.body.twitterUrl,
-        kickUrl: req.body.kickUrl // ستحتاج لإضافة kickUrl للموديل كما شرحنا سابقاً
-    });
-
-    res.redirect('/admin-justice?pass=1234');
-});
-
-
-app.get('/admin/delete-streamer/:id', async (req, res) => {
-    if (req.query.pass !== "1234") return res.status(403).send("❌");
-
-    await Streamer.findByIdAndDelete(req.params.id);
-
-    res.redirect('/admin-justice?pass=1234');
-});
-
-// ================= START SERVER =================
+// ================= بدء تشغيل السيرفر =================
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () =>
-    console.log(`🚀 السيرفر يعمل على: ${PORT}`)
-);
+app.listen(PORT, '0.0.0.0', () => console.log(`🚀 السيرفر يعمل بشكل ممتاز على المنفذ: ${PORT}`));
