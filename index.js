@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const axios = require('axios');
 const path = require('path');
+const { fetch } = require('undici');
 
 const app = express();
 
@@ -33,73 +33,57 @@ let isUpdating = false;
 async function updateKickStatus() {
     if (isUpdating) return;
     isUpdating = true;
-    console.log("🚀 جاري فحص حالة البث عبر الخادم البديل المستقر...");
+    console.log("🚀 جاري فحص حالة البث باستخدام تقنية fetch الذكية المدمجة...");
 
     try {
         const streamers = await Streamer.find({});
         for (const streamer of streamers) {
             const cleanName = streamer.kickUsername.trim().toLowerCase();
             try {
-                // استخدام الـ API المفتوح والمستقر لجلب بيانات قنوات Kick بدون حظر Cloudflare
-                const response = await axios.get(`https://kickapi.vercel.app/api/channel/${cleanName}`, {
-                    timeout: 10000,
+                // طلب البيانات مباشرة من رابط كيك الأساسي باستخدام fetch المدمجة في Node 24
+                const response = await fetch(`https://kick.com/api/v1/channels/${cleanName}`, {
                     headers: {
-                        "Accept": "application/json"
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                        "Accept": "application/json, text/plain, */*",
+                        "Accept-Language": "en-US,en;q=0.9",
+                        "Referer": "https://kick.com"
                     }
                 });
 
-                if (response.data) {
-                    const data = response.data;
+                if (!response.ok) {
+                    throw new Error(`خطأ في الشبكة: ${response.status}`);
+                }
 
-                    // قراءة حالة البث والمشاهدين والصورة من الـ API البديل
+                const data = await response.json();
+
+                if (data) {
+                    // استخراج حالة البث والمشاهدين والصورة من الـ JSON مباشرة
                     const isLive = !!data.livestream;
-                    const viewers = data.livestream ? parseInt(data.livestream.viewer_count || 0) : 0;
-                    const profilePic = data.user?.profile_pic || streamer.profilePic;
+                    const viewers = data.livestream?.viewer_count || 0;
+                    const profilePic = data.user?.profile_pic || data.user?.profile?.avatar || streamer.profilePic;
 
                     await Streamer.updateOne(
                         { _id: streamer._id },
                         { $set: { isLive, profilePic, viewers } }
                     );
-                    console.log(`✅ [خادم بديل] ${cleanName} | بث: ${isLive ? "🔴 فاتح" : "⚫ مغلق"} | المشاهدات: ${viewers}`);
+                    console.log(`✅ ${cleanName} | بث: ${isLive ? "🔴 فاتح" : "⚫ مغلق"} | المشاهدات: ${viewers}`);
                 }
             } catch (err) {
-                // إذا واجه هذا السيرفر أي مشكلة مؤقتة، نستخدم خادم كشط الـ HTML الاحتياطي الثاني
-                try {
-                    const backupResponse = await axios.get(`https://kick.com/${cleanName}`, {
-                        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
-                        timeout: 10000
-                    });
-
-                    const html = backupResponse.data;
-                    const isLive = html.includes('"is_live":true') || html.includes('"livestream":{');
-                    let viewers = 0;
-                    if (isLive) {
-                        const match = html.match(/"viewer_count":([0-9]+)/);
-                        viewers = match ? parseInt(match) : 0;
-                    }
-
-                    await Streamer.updateOne(
-                        { _id: streamer._id },
-                        { $set: { isLive, viewers } }
-                    );
-                    console.log(`🔄 [احتياطي HTML] ${cleanName} | بث: ${isLive ? "🔴 فاتح" : "⚫ مغلق"}`);
-                } catch (backupErr) {
-                    console.log(`❌ فشل الفحص بالكامل للستريمر (${cleanName}): ${backupErr.message}`);
-                    // تحويل آمن للأوفلاين عند انقطاع كافة السبل
-                    await Streamer.updateOne(
-                        { _id: streamer._id },
-                        { $set: { isLive: false, viewers: 0 } }
-                    );
-                }
+                console.log(`⚠️ فشل الفحص للستريمر (${cleanName}): ${err.message}`);
+                // تحويل آمن للأوفلاين عند حدوث حظر أو خطأ
+                await Streamer.updateOne(
+                    { _id: streamer._id },
+                    { $set: { isLive: false, viewers: 0 } }
+                );
             }
-            // انتظار ثانيتين بين الستريمرز لمنع الضغط
-            await new Promise(r => setTimeout(r, 2000));
+            // انتظار 4 ثوانٍ بين كل ستريمر والآخر لتجنب كشف السيرفر
+            await new Promise(r => setTimeout(r, 4000));
         }
     } catch (globalErr) {
         console.error("❌ خطأ عام في نظام التحديث:", globalErr.message);
     } finally {
         isUpdating = false;
-        console.log("🏁 انتهت دورة فحص القنوات الحالية.");
+        console.log("🏁 انتهت دورة الفحص الحالية.");
     }
 }
 
