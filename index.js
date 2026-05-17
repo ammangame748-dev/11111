@@ -41,7 +41,7 @@ async function updateKickStatus() {
             const cleanName = streamer.kickUsername.trim().toLowerCase();
             try {
                 // طلب البيانات مباشرة من رابط كيك الأساسي باستخدام fetch المدمجة في Node 24
-                const response = await fetch(`https://kick.com/api/v1/channels/${cleanName}`, {
+                const response = await fetch(`https://kick.com/video/embed/${cleanName}`, {
                     headers: {
                         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
                         "Accept": "application/json, text/plain, */*",
@@ -54,20 +54,19 @@ async function updateKickStatus() {
                     throw new Error(`خطأ في الشبكة: ${response.status}`);
                 }
 
-                const data = await response.json();
+                const html = await response.text();
 
-                if (data) {
-                    // استخراج حالة البث والمشاهدين والصورة من الـ JSON مباشرة
-                    const isLive = !!data.livestream;
-                    const viewers = data.livestream?.viewer_count || 0;
-                    const profilePic = data.user?.profile_pic || data.user?.profile?.avatar || streamer.profilePic;
+                // فحص ذكي داخل نص الصفحة لمعرفة حالة البث
+                const isLive = html.includes('"isLive":true') || html.includes('🔴') || !html.includes('is-offline');
+                let viewers = isLive ? 1 : 0; 
+                let profilePic = streamer.profilePic; 
 
-                    await Streamer.updateOne(
-                        { _id: streamer._id },
-                        { $set: { isLive, profilePic, viewers } }
-                    );
-                    console.log(`✅ ${cleanName} | بث: ${isLive ? "🔴 فاتح" : "⚫ مغلق"} | المشاهدات: ${viewers}`);
-                }
+                await Streamer.updateOne(
+                    { _id: streamer._id },
+                    { $set: { isLive, profilePic, viewers } }
+                );
+                console.log(`✅ ${cleanName} | بث: ${isLive ? "🔴 فاتح" : "⚫ مغلق"}`);
+                
             } catch (err) {
                 console.log(`⚠️ فشل الفحص للستريمر (${cleanName}): ${err.message}`);
                 // تحويل آمن للأوفلاين عند حدوث حظر أو خطأ
@@ -76,6 +75,7 @@ async function updateKickStatus() {
                     { $set: { isLive: false, viewers: 0 } }
                 );
             }
+
             // انتظار 4 ثوانٍ بين كل ستريمر والآخر لتجنب كشف السيرفر
             await new Promise(r => setTimeout(r, 4000));
         }
