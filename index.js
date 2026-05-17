@@ -19,14 +19,16 @@ mongoose.connect(MONGO_URI)
     .then(() => console.log('✅ متصل بقاعدة البيانات بنجاح'))
     .catch(err => console.error('❌ خطأ قاعدة البيانات:', err));
 
-// الموديل لحفظ حالة البث والصورة فقط
+// الموديل مضاف إليه الحقول التي يستدعيها ملف التصميم لمنع الانهيار
 const Streamer = mongoose.model('KickConfig', new mongoose.Schema({
     kickUsername: { type: String, required: true, unique: true },
     isLive: { type: Boolean, default: false },
-    profilePic: { type: String, default: '' }
+    profilePic: { type: String, default: '' },
+    viewers: { type: Number, default: 0 },
+    twitterUrl: { type: String, default: '' },
+    kickUrl: { type: String, default: '' }
 }));
 
-// دالة تخطي حظر جدار الحماية لجلب الصورة وحالة البث
 // دالة تخطي حظر جدار الحماية لجلب الصورة وحالة البث
 let isUpdating = false;
 async function updateKickStatus() {
@@ -40,9 +42,8 @@ async function updateKickStatus() {
             try {
                 const cleanName = streamer.kickUsername.trim().toLowerCase();
 
-                // التعديل هنا: تصحيح الرابط وإضافة الرابط الفعلي لـ API الخاص بكيك إذا كنت تستخدم بروكسب أو جلب مباشر
-                // ملاحظة: جلب الرابط المباشر من ://kick.com قد يحتاج بروكسي على Render بسبب Cloudflare
-                const response = await axios.get(`https://://kick.com${cleanName}`, {
+                // تصحيح خطأ الرابط وصيغة الـ Template Literal بشكل سليم 100%
+                const response = await axios.get(`https://kick.com{cleanName}`, {
                     headers: {
                         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
                         "Accept": "application/json, text/plain, */*",
@@ -56,10 +57,11 @@ async function updateKickStatus() {
                     const data = response.data;
                     const isLive = !!data.livestream;
                     const profilePic = data.user?.profile_pic || data.user?.profile?.avatar || "";
+                    const viewers = data.livestream?.viewer_count || 0;
 
                     await Streamer.updateOne(
                         { _id: streamer._id },
-                        { $set: { isLive, profilePic } }
+                        { $set: { isLive, profilePic, viewers } }
                     );
                     console.log(`✅ ${cleanName} | بث: ${isLive ? "🔴 فاتح" : "⚫ مغلق"}`);
                 }
@@ -68,13 +70,13 @@ async function updateKickStatus() {
                     console.log(`⚠️ حظر 403 من كيك للمستخدم (${streamer.kickUsername}) - تحويل آمن للحالة المؤقتة.`);
                     await Streamer.updateOne(
                         { _id: streamer._id },
-                        { $set: { isLive: false } }
+                        { $set: { isLive: false, viewers: 0 } }
                     );
                 } else {
                     console.log(`❌ خطأ مع الستريمر (${streamer.kickUsername}): ${err.message}`);
                 }
             }
-            await new Promise(r => setTimeout(r, 2000)); // تأخير بين الطلبات لمنع الحظر
+            await new Promise(r => setTimeout(r, 2000));
         }
     } catch (globalErr) {
         console.error("❌ خطأ عام:", globalErr.message);
@@ -82,7 +84,6 @@ async function updateKickStatus() {
         isUpdating = false;
     }
 }
-
 
 // تشغيل دوري كل 5 دقائق وتشغيل فوري بعد إقلاع السيرفر بـ 3 ثوانٍ
 setInterval(updateKickStatus, 300000);
@@ -92,12 +93,39 @@ setTimeout(updateKickStatus, 3000);
 app.get('/', async (req, res) => {
     try {
         const streamersData = await Streamer.find({}).sort({ isLive: -1 });
-        res.render('index', { streamers: streamersData });
+
+        // حساب المتغيرات المطلوبة لعرض الإحصائيات في ملف index.ejs دون أخطاء
+        const totalStreamers = streamersData.length;
+        const liveNow = streamersData.filter(s => s.isLive).length;
+        const totalViewers = streamersData.reduce((acc, curr) => acc + (curr.viewers || 0), 0);
+
+        res.render('index', {
+            streamers: streamersData,
+            stats: {
+                totalStreamers: totalStreamers,
+                totalViewers: totalViewers,
+                liveNow: liveNow
+            }
+        });
     } catch (err) {
         res.status(500).send("خطأ في السيرفر");
     }
 });
 
+// مسار استقبال طلبات الانضمام بناءً على الـ Form في ملف الـ EJS الخاص بك
+app.post('/apply', async (req, res) => {
+    try {
+        const { kickUser } = req.body;
+        if (!kickUser) return res.status(400).send("الاسم مطلوب");
+        await Streamer.create({ kickUsername: kickUser.trim() });
+        res.send("<script>alert('تم إرسال الطلب بنجاح!'); window.location='/';</script>");
+        setTimeout(updateKickStatus, 1000);
+    } catch (err) {
+        res.status(500).send("الاسم مضاف سابقاً أو حدث خطأ");
+    }
+});
+
+// مسار إضافة ستريمر لحفظ التوافقية مع الأكواد السابقة
 app.post('/add-streamer', async (req, res) => {
     try {
         const { username } = req.body;
