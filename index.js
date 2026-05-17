@@ -65,7 +65,7 @@ async function updateKickStatus() {
             const cleanName = streamer.kickUsername.trim().toLowerCase();
             try {
                 // الدخول إلى رابط الـ API الخاص بالقناة مباشرة
-                await page.goto(`https://kick.com{cleanName}`, {
+                await page.goto(`https://kick.com/api/v1/channels/${cleanName}`, {
                     waitUntil: 'domcontentloaded',
                     timeout: 20000
                 });
