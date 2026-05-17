@@ -20,25 +20,42 @@
 
     <!-- قسم طلبات الانضمام الجديدة -->
     <section>
-        <h2 style="color: #fff; border-right: 4px solid var(--neon-blue); padding-right: 15px;">طلبات معلقة (<%= apps.length %>)</h2>
+        <h2 style="color: #fff; border-right: 4px solid var(--neon-blue); padding-right: 15px;">طلبات معلقة (<%=
+                apps.length %>)</h2>
         <div class="cards-grid" style="grid-template-columns: 1fr;">
-            <% if (apps.length === 0) { %>
+            <% if (apps.length===0) { %>
                 <p style="color: #555; text-align: center;">لا توجد طلبات جديدة حالياً...</p>
-            <% } %>
-            <% apps.forEach(app => { %>
-                <div class="card" style="height: 80px; border-color: #ffcc00;">
-                    <div class="card-content" style="flex-direction: row; display: flex; justify-content: space-around; width: 100%; align-items: center;">
-                        <div style="text-align: right;">
-                            <h3 style="font-size: 20px;"><%= app.kickUsername %></h3>
-                            <small style="color: #888;">ديسكورد: <%= app.discordName %></small>
+                <% } %>
+                    <% apps.forEach(app=> { %>
+                        <div class="card" style="height: 80px; border-color: #ffcc00;">
+                            <div class="card-content"
+                                style="flex-direction: row; display: flex; justify-content: space-around; width: 100%; align-items: center;">
+                                <div style="text-align: right;">
+                                    <h3 style="font-size: 20px;">
+                                        <%= app.kickUsername %>
+                                    </h3>
+                                    <small style="color: #888;">ديسكورد: <%= app.discordName || 'غير محدد' %></small>
+                                </div>
+                                <div style="display: flex; gap: 10px;">
+                                    <!-- 🛠️ تعديل الرابط ليتوافق مع مسار السيرفر للقبول عبر GET إذا قمت بتغييره، أو يمكنك جعله فورم مخفي إذا أردت الالتزام بـ POST -->
+                                    <form action="/admin-justice/approve/<%= app._id %>" method="POST"
+                                        style="margin: 0; display: inline;">
+                                        <button type="submit" class="watch-btn"
+                                            style="background: #53fc18; border: none; cursor: pointer; height: 100%;">✅
+                                            قبول</button>
+                                    </form>
+
+                                    <!-- 🛠️ تعديل الرابط ليتوافق مع مسار السيرفر للرفض -->
+                                    <form action="/admin-justice/reject/<%= app._id %>" method="POST"
+                                        style="margin: 0; display: inline;">
+                                        <button type="submit" class="watch-btn"
+                                            style="background: #ff4b4b; color: white; border: none; cursor: pointer; height: 100%;">❌
+                                            رفض</button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
-                        <div style="display: flex; gap: 10px;">
-                            <a href="/admin/accept/<%= app._id %>?pass=1234" class="watch-btn" style="background: #53fc18;">✅ قبول</a>
-                            <a href="/admin/reject/<%= app._id %>?pass=1234" class="watch-btn" style="background: #ff4b4b; color: white;">❌ رفض</a>
-                        </div>
-                    </div>
-                </div>
-            <% }) %>
+                        <% }) %>
         </div>
     </section>
 
@@ -48,43 +65,61 @@
     <section>
         <h2 style="color: #fff; border-right: 4px solid #ff4b4b; padding-right: 15px;">إدارة الستريمرز الحاليين</h2>
         <div class="cards-grid" style="grid-template-columns: 1fr;">
-            <% streamers.forEach(s => { %>
-                <div class="card" style="min-height: 120px; height: auto; border-color: var(--neon-blue); padding: 20px 0;">
-                    <div class="card-content" style="flex-direction: row; display: flex; justify-content: space-around; width: 100%; align-items: center; flex-wrap: wrap; gap: 20px;">
-                        
+            <% streamers.forEach(s=> { %>
+                <div class="card"
+                    style="min-height: 120px; height: auto; border-color: var(--neon-blue); padding: 20px 0;">
+                    <div class="card-content"
+                        style="flex-direction: row; display: flex; justify-content: space-around; width: 100%; align-items: center; flex-wrap: wrap; gap: 20px;">
+
                         <!-- معلومات الستريمر -->
                         <div style="display: flex; align-items: center; gap: 15px; min-width: 180px;">
-                            <img src="<%= s.profilePic || '/black.png' %>" style="width: 55px; height: 55px; border-radius: 50%; border: 2px solid var(--neon-blue); object-fit: cover;">
-                            <h3 style="font-size: 18px;"><%= s.kickUsername %></h3>
+                            <img src="<%= s.profilePic || '/black.png' %>"
+                                style="width: 55px; height: 55px; border-radius: 50%; border: 2px solid var(--neon-blue); object-fit: cover;">
+                            <h3 style="font-size: 18px;">
+                                <%= s.kickUsername %>
+                            </h3>
                         </div>
 
                         <!-- تعديل الروابط (كيك وتويتر) -->
-                        <form action="/admin/update-links/<%= s._id %>?pass=1234" method="POST" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- 🛠️ تعديل مسار الحفظ ليتوافق مع السيرفر الأساسي -->
+                        <form action="/admin-justice/update-links/<%= s._id %>" method="POST"
+                            style="display: flex; flex-direction: column; gap: 10px;">
                             <!-- رابط كيك -->
-                            <input type="text" name="kickUrl" value="<%= s.kickUrl || '' %>" placeholder="انسخ رابط قناة Kick هنا" 
-                                   style="background: #111; color: #53fc18; border: 1px solid #333; border-radius: 6px; padding: 8px 12px; font-size: 13px; width: 280px;">
-                            
+                            <input type="text" name="kickUrl" value="<%= s.kickUrl || '' %>"
+                                placeholder="انسخ رابط قناة Kick هنا"
+                                style="background: #111; color: #53fc18; border: 1px solid #333; border-radius: 6px; padding: 8px 12px; font-size: 13px; width: 280px;">
+
                             <!-- رابط تويتر وزر الحفظ -->
                             <div style="display: flex; gap: 8px;">
-                                <input type="text" name="twitterUrl" value="<%= s.twitterUrl || '' %>" placeholder="رابط تويتر (X)" 
-                                       style="background: #111; color: #1da1f2; border: 1px solid #333; border-radius: 6px; padding: 8px 12px; font-size: 13px; width: 180px;">
-                                <button type="submit" style="background: #53fc18; color: black; border: none; border-radius: 6px; cursor: pointer; padding: 0 15px; font-weight: bold; height: 35px;">💾 حفظ</button>
+                                <input type="text" name="twitterUrl" value="<%= s.twitterUrl || '' %>"
+                                    placeholder="رابط تويتر (X)"
+                                    style="background: #111; color: #1da1f2; border: 1px solid #333; border-radius: 6px; padding: 8px 12px; font-size: 13px; width: 180px;">
+                                <button type="submit"
+                                    style="background: #53fc18; color: black; border: none; border-radius: 6px; cursor: pointer; padding: 0 15px; font-weight: bold; height: 35px;">💾
+                                    حفظ</button>
                             </div>
                         </form>
 
                         <!-- زر الطرد -->
-                        <a href="/admin/delete-streamer/<%= s._id %>?pass=1234" class="watch-btn"
-                            style="background: #1a1a1a; color: #ff4b4b; border: 1px solid #ff4b4b; padding: 8px 20px;"
-                            onclick="return confirm('هل أنت متأكد من طرد هذا الستريمر؟')">🗑️ طرد</a>
+                        <!-- 🛠️ تعديل مسار الطرد ليستخدم نفس مسار الرفض لأن السيرفر يحذف السجل تماماً عند الرفض -->
+                        <form action="/admin-justice/reject/<%= s._id %>" method="POST"
+                            onsubmit="return confirm('هل أنت متأكد من طرد هذا الستريمر؟')"
+                            style="margin: 0; display: inline;">
+                            <button type="submit" class="watch-btn"
+                                style="background: #1a1a1a; color: #ff4b4b; border: 1px solid #ff4b4b; padding: 8px 20px; cursor: pointer; font-weight: bold;">🗑️
+                                طرد</button>
+                        </form>
                     </div>
                 </div>
-            <% }) %>
+                <% }) %>
         </div>
     </section>
 
     <div style="text-align: center; margin-top: 50px;">
-        <a href="/" style="color: var(--neon-blue); text-decoration: none; font-weight: bold;">← العودة للموقع الرئيسي</a>
+        <a href="/" style="color: var(--neon-blue); text-decoration: none; font-weight: bold;">← العودة للموقع
+            الرئيسي</a>
     </div>
 
 </body>
+
 </html>

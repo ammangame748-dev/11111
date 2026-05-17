@@ -5,163 +5,172 @@ const { fetch } = require('undici');
 
 const app = express();
 
-// الإعدادات الأساسية والمصاحبة لبنية المجلدات
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// قاعدة البيانات
 const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://hsamhmaydh4_db_user:xls5Av4Nr4a5PA7W@cluster0.wjnh8d0.mongodb.net/BlackListDB?retryWrites=true&w=majority";
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('✅ متصل بقاعدة البيانات بنجاح'))
     .catch(err => console.error('❌ خطأ قاعدة البيانات:', err));
 
-// الموديل مضاف إليه الحقول التي يستدعيها ملف التصميم لمنع الانهيار
+// 🛠️ تعديل الموديل: إضافة حقل status للتحكم بالقبول والرفض
 const Streamer = mongoose.model('KickConfig', new mongoose.Schema({
     kickUsername: { type: String, required: true, unique: true },
     isLive: { type: Boolean, default: false },
     profilePic: { type: String, default: '' },
     viewers: { type: Number, default: 0 },
     twitterUrl: { type: String, default: '' },
-    kickUrl: { type: String, default: '' }
+    kickUrl: { type: String, default: '' },
+    status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' } // الحقل الجديد
 }));
 
 let isUpdating = false;
 async function updateKickStatus() {
     if (isUpdating) return;
     isUpdating = true;
-    console.log("🚀 جاري فحص حالة البث باستخدام تقنية fetch الذكية المدمجة...");
+    console.log("🚀 جاري فحص حالة البث للقنوات المقبولة فقط...");
 
     try {
-        const streamers = await Streamer.find({});
+        // 🛠️ تعديل الفحص: يفحص فقط القنوات المقبولة (approved) لتوفير جهد السيرفر
+        const streamers = await Streamer.find({ status: 'approved' });
         for (const streamer of streamers) {
             const cleanName = streamer.kickUsername.trim().toLowerCase();
             try {
-                // طلب البيانات مباشرة من رابط كيك الأساسي باستخدام fetch المدمجة في Node 24
-                const response = await fetch(`https://kick.com/video/embed/${cleanName}`, {
+                const targetUrl = encodeURIComponent(`https://kick.com{cleanName}`);
+                const response = await fetch(`https://allorigins.win{targetUrl}`, {
                     headers: {
                         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
                         "Accept": "application/json, text/plain, */*",
-                        "Accept-Language": "en-US,en;q=0.9",
                         "Referer": "https://kick.com"
                     }
                 });
 
-                if (!response.ok) {
-                    throw new Error(`خطأ في الشبكة: ${response.status}`);
+                if (!response.ok) throw new Error(`خطأ في السيرفر الوسيط: ${response.status}`);
+
+                const jsonRes = await response.json();
+                if (jsonRes && jsonRes.contents) {
+                    const data = JSON.parse(jsonRes.contents);
+                    const isLive = !!data.livestream;
+                    const viewers = data.livestream?.viewer_count || 0;
+                    const profilePic = data.user?.profile_pic || data.user?.profile?.avatar || streamer.profilePic;
+
+                    await Streamer.updateOne(
+                        { _id: streamer._id },
+                        { $set: { isLive, profilePic, viewers } }
+                    );
+                    console.log(`✅ ${cleanName} | بث: ${isLive ? "🔴 فاتح" : "⚫ مغلق"}`);
                 }
-
-                const html = await response.text();
-
-                // فحص ذكي داخل نص الصفحة لمعرفة حالة البث
-                const isLive = html.includes('"isLive":true') || html.includes('🔴') || !html.includes('is-offline');
-                let viewers = isLive ? 1 : 0; 
-                let profilePic = streamer.profilePic; 
-
-                await Streamer.updateOne(
-                    { _id: streamer._id },
-                    { $set: { isLive, profilePic, viewers } }
-                );
-                console.log(`✅ ${cleanName} | بث: ${isLive ? "🔴 فاتح" : "⚫ مغلق"}`);
-                
             } catch (err) {
                 console.log(`⚠️ فشل الفحص للستريمر (${cleanName}): ${err.message}`);
-                // تحويل آمن للأوفلاين عند حدوث حظر أو خطأ
-                await Streamer.updateOne(
-                    { _id: streamer._id },
-                    { $set: { isLive: false, viewers: 0 } }
-                );
+                await Streamer.updateOne({ _id: streamer._id }, { $set: { isLive: false, viewers: 0 } });
             }
-
-            // انتظار 4 ثوانٍ بين كل ستريمر والآخر لتجنب كشف السيرفر
             await new Promise(r => setTimeout(r, 4000));
         }
     } catch (globalErr) {
-        console.error("❌ خطأ عام في نظام التحديث:", globalErr.message);
+        console.error("❌ خطأ في نظام التحديث:", globalErr.message);
     } finally {
         isUpdating = false;
-        console.log("🏁 انتهت دورة الفحص الحالية.");
     }
 }
 
-// تشغيل دوري كل 5 دقائق وتشغيل فوري بعد إقلاع السيرفر بـ 3 ثوانٍ
-setInterval(updateKickStatus, 300000);
+setInterval(updateKickStatus, 30000);
 setTimeout(updateKickStatus, 3000);
 
-// المسارات
+// 🛠️ الصفحة الرئيسية: تعرض فقط القنوات المقبولة (status: 'approved')
 app.get('/', async (req, res) => {
     try {
-        const streamersData = await Streamer.find({}).sort({ isLive: -1 });
+        const streamersData = await Streamer.find({ status: 'approved' }).sort({ isLive: -1 });
 
-        // حساب المتغيرات المطلوبة لعرض الإحصائيات في ملف index.ejs دون أخطاء
         const totalStreamers = streamersData.length;
         const liveNow = streamersData.filter(s => s.isLive).length;
         const totalViewers = streamersData.reduce((acc, curr) => acc + (curr.viewers || 0), 0);
 
         res.render('index', {
             streamers: streamersData,
-            stats: {
-                totalStreamers: totalStreamers,
-                totalViewers: totalViewers,
-                liveNow: liveNow
-            }
+            stats: { totalStreamers, totalViewers, liveNow }
         });
     } catch (err) {
         res.status(500).send("خطأ في السيرفر");
     }
 });
 
-// مسار استقبال طلبات الانضمام بناءً على الـ Form في ملف الـ EJS الخاص بك
+// تقديم طلب انضمام (يدخل بوضعية الانتظار تلقائياً pending)
 app.post('/apply', async (req, res) => {
     try {
         const { kickUser } = req.body;
         if (!kickUser) return res.status(400).send("الاسم مطلوب");
+        
+        // ينشأ تلقائياً بـ status: 'pending' بناءً على الموديل
         await Streamer.create({ kickUsername: kickUser.trim() });
-        res.send("<script>alert('تم إرسال الطلب بنجاح!'); window.location='/';</script>");
-        setTimeout(updateKickStatus, 1000);
+        res.send("<script>alert('تم إرسال طلبك بنجاح وينتظر موافقة الإدارة!'); window.location='/';</script>");
     } catch (err) {
         res.status(500).send("الاسم مضاف سابقاً أو حدث خطأ");
     }
 });
 
-// مسار إضافة ستريمر من الكود القديم لحفظ التوافقية
+// إضافة مباشرة من الإدارة (تعتبر مقبولة فوراً approved)
 app.post('/add-streamer', async (req, res) => {
     try {
         const { username } = req.body;
         if (!username) return res.status(400).send("الاسم مطلوب");
-        await Streamer.create({ kickUsername: username.trim() });
+        await Streamer.create({ kickUsername: username.trim(), status: 'approved' });
         res.send("<script>alert('تم إضافة الستريمر بنجاح!'); window.location='/';</script>");
         setTimeout(updateKickStatus, 1000);
     } catch (err) {
         res.status(500).send("الاسم مضاف سابقاً أو حدث خطأ");
     }
 });
+
+// 🛠️ لوحة الأدمن: تعرض القنوات المقبولة، والطلبات المنتظرة في قائمة منفصلة
 app.get('/admin-justice', async (req, res) => {
     try {
-        const streamersData = await Streamer.find({});
+        const approvedStreamers = await Streamer.find({ status: 'approved' });
+        const pendingRequests = await Streamer.find({ status: 'pending' }); // جلب الطلبات الجديدة
+
         res.render('admin', {
-            streamers: streamersData,
-            apps: []
+            streamers: approvedStreamers, // القنوات الظاهرة بالموقع
+            apps: pendingRequests // الطلبات التي تنتظر القبول أو الرفض
         });
     } catch (err) {
         res.status(500).send("خطأ في تحميل لوحة التحكم");
     }
 });
+
+// 🛠️ مسار جديد: قبول القناة
+app.post('/admin-justice/approve/:id', async (req, res) => {
+    try {
+        await Streamer.findByIdAndUpdate(req.params.id, { $set: { status: 'approved' } });
+        res.redirect('/admin-justice');
+        setTimeout(updateKickStatus, 1000); // تحديث حالته فوراً بعد القبول
+    } catch (err) {
+        res.status(500).send("حدث خطأ أثناء القبول");
+    }
+});
+
+// 🛠️ مسار جديد: رفض القناة (حذفها نهائياً أو تغيير حالتها لـ rejected)
+app.post('/admin-justice/reject/:id', async (req, res) => {
+    try {
+        // يمكنك حذفها نهائياً لخفيفة قاعدة البيانات
+        await Streamer.findByIdAndDelete(req.params.id); 
+        res.redirect('/admin-justice');
+    } catch (err) {
+        res.status(500).send("حدث خطأ أثناء الرفض");
+    }
+});
+
 app.post('/admin-justice/update-links/:id', async (req, res) => {
     try {
         const { kickUrl, twitterUrl } = req.body;
-        await Streamer.findByIdAndUpdate(req.params.id, {
-            $set: { kickUrl, twitterUrl }
-        });
-        res.redirect('/admin-justice?pass=1234');
+        await Streamer.findByIdAndUpdate(req.params.id, { $set: { kickUrl, twitterUrl } });
+        res.redirect('/admin-justice');
     } catch (err) {
         res.status(500).send("حدث خطأ أثناء التحديث");
     }
 });
-
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => console.log(`🚀 السيرفر يعمل على منفذ: ${PORT}`));
