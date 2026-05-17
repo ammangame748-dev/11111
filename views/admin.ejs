@@ -27,29 +27,28 @@
                 <p style="color: #555; text-align: center;">لا توجد طلبات جديدة حالياً...</p>
                 <% } %>
                     <% apps.forEach(app=> { %>
-                        <div class="card" style="height: 80px; border-color: #ffcc00;">
+                        <div class="card"
+                            style="height: auto; min-height: 80px; border-color: #ffcc00; margin-bottom: 15px; padding: 10px 0;">
                             <div class="card-content"
-                                style="flex-direction: row; display: flex; justify-content: space-around; width: 100%; align-items: center;">
+                                style="flex-direction: row; display: flex; justify-content: space-around; width: 100%; align-items: center; flex-wrap: wrap; gap: 15px;">
                                 <div style="text-align: right;">
                                     <h3 style="font-size: 20px;">
                                         <%= app.kickUsername %>
                                     </h3>
-                                    <small style="color: #888;">ديسكورد: <%= app.discordName || 'غير محدد' %></small>
                                 </div>
                                 <div style="display: flex; gap: 10px;">
-                                    <!-- 🛠️ تعديل الرابط ليتوافق مع مسار السيرفر للقبول عبر GET إذا قمت بتغييره، أو يمكنك جعله فورم مخفي إذا أردت الالتزام بـ POST -->
+                                    <!-- زر القبول المعتمد بالسيرفر -->
                                     <form action="/admin-justice/approve/<%= app._id %>" method="POST"
                                         style="margin: 0; display: inline;">
                                         <button type="submit" class="watch-btn"
-                                            style="background: #53fc18; border: none; cursor: pointer; height: 100%;">✅
+                                            style="background: #53fc18; border: none; cursor: pointer; padding: 8px 20px; font-weight: bold; border-radius: 4px;">✅
                                             قبول</button>
                                     </form>
-
-                                    <!-- 🛠️ تعديل الرابط ليتوافق مع مسار السيرفر للرفض -->
+                                    <!-- زر الرفض المعتمد بالسيرفر -->
                                     <form action="/admin-justice/reject/<%= app._id %>" method="POST"
                                         style="margin: 0; display: inline;">
                                         <button type="submit" class="watch-btn"
-                                            style="background: #ff4b4b; color: white; border: none; cursor: pointer; height: 100%;">❌
+                                            style="background: #ff4b4b; color: white; border: none; cursor: pointer; padding: 8px 20px; font-weight: bold; border-radius: 4px;">❌
                                             رفض</button>
                                     </form>
                                 </div>
@@ -63,55 +62,55 @@
 
     <!-- قسم إدارة الستريمرز الحاليين -->
     <section>
-        <h2 style="color: #fff; border-right: 4px solid #ff4b4b; padding-right: 15px;">إدارة الستريمرز الحاليين</h2>
+        <h2 style="color: #fff; border-right: 4px solid #ff4b4b; padding-right: 15px;">إدارة الستريمرز الحاليين (<%=
+                streamers.length %>)</h2>
         <div class="cards-grid" style="grid-template-columns: 1fr;">
-            <% streamers.forEach(s=> { %>
-                <div class="card"
-                    style="min-height: 120px; height: auto; border-color: var(--neon-blue); padding: 20px 0;">
-                    <div class="card-content"
-                        style="flex-direction: row; display: flex; justify-content: space-around; width: 100%; align-items: center; flex-wrap: wrap; gap: 20px;">
+            <% if (streamers.length===0) { %>
+                <p style="color: #555; text-align: center;">لا يوجد ستريمرز مقبولين حالياً...</p>
+                <% } %>
+                    <% streamers.forEach(s=> { %>
+                        <div class="card"
+                            style="min-height: 120px; height: auto; border-color: var(--neon-blue); padding: 20px 0; margin-bottom: 15px;">
+                            <div class="card-content"
+                                style="flex-direction: row; display: flex; justify-content: space-around; width: 100%; align-items: center; flex-wrap: wrap; gap: 20px;">
 
-                        <!-- معلومات الستريمر -->
-                        <div style="display: flex; align-items: center; gap: 15px; min-width: 180px;">
-                            <img src="<%= s.profilePic || '/black.png' %>"
-                                style="width: 55px; height: 55px; border-radius: 50%; border: 2px solid var(--neon-blue); object-fit: cover;">
-                            <h3 style="font-size: 18px;">
-                                <%= s.kickUsername %>
-                            </h3>
-                        </div>
+                                <!-- معلومات الستريمر -->
+                                <div style="display: flex; align-items: center; gap: 15px; min-width: 180px;">
+                                    <img src="<%= s.profilePic || '/black.png' %>"
+                                        style="width: 55px; height: 55px; border-radius: 50%; border: 2px solid var(--neon-blue); object-fit: cover;">
+                                    <h3 style="font-size: 18px;">
+                                        <%= s.kickUsername %>
+                                    </h3>
+                                </div>
 
-                        <!-- تعديل الروابط (كيك وتويتر) -->
-                        <!-- 🛠️ تعديل مسار الحفظ ليتوافق مع السيرفر الأساسي -->
-                        <form action="/admin-justice/update-links/<%= s._id %>" method="POST"
-                            style="display: flex; flex-direction: column; gap: 10px;">
-                            <!-- رابط كيك -->
-                            <input type="text" name="kickUrl" value="<%= s.kickUrl || '' %>"
-                                placeholder="انسخ رابط قناة Kick هنا"
-                                style="background: #111; color: #53fc18; border: 1px solid #333; border-radius: 6px; padding: 8px 12px; font-size: 13px; width: 280px;">
+                                <!-- تعديل الروابط (كيك وتويتر) -->
+                                <form action="/admin-justice/update-links/<%= s._id %>" method="POST"
+                                    style="display: flex; flex-direction: column; gap: 10px;">
+                                    <input type="text" name="kickUrl" value="<%= s.kickUrl || '' %>"
+                                        placeholder="انسخ رابط قناة Kick هنا"
+                                        style="background: #111; color: #53fc18; border: 1px solid #333; border-radius: 6px; padding: 8px 12px; font-size: 13px; width: 280px;">
 
-                            <!-- رابط تويتر وزر الحفظ -->
-                            <div style="display: flex; gap: 8px;">
-                                <input type="text" name="twitterUrl" value="<%= s.twitterUrl || '' %>"
-                                    placeholder="رابط تويتر (X)"
-                                    style="background: #111; color: #1da1f2; border: 1px solid #333; border-radius: 6px; padding: 8px 12px; font-size: 13px; width: 180px;">
-                                <button type="submit"
-                                    style="background: #53fc18; color: black; border: none; border-radius: 6px; cursor: pointer; padding: 0 15px; font-weight: bold; height: 35px;">💾
-                                    حفظ</button>
+                                    <div style="display: flex; gap: 8px;">
+                                        <input type="text" name="twitterUrl" value="<%= s.twitterUrl || '' %>"
+                                            placeholder="رابط تويتر (X)"
+                                            style="background: #111; color: #1da1f2; border: 1px solid #333; border-radius: 6px; padding: 8px 12px; font-size: 13px; width: 180px;">
+                                        <button type="submit"
+                                            style="background: #53fc18; color: black; border: none; border-radius: 6px; cursor: pointer; padding: 0 15px; font-weight: bold; height: 35px;">💾
+                                            حفظ</button>
+                                    </div>
+                                </form>
+
+                                <!-- زر الطرد الفعلي -->
+                                <form action="/admin-justice/reject/<%= s._id %>" method="POST"
+                                    onsubmit="return confirm('هل أنت متأكد من طرد هذا الستريمر؟')"
+                                    style="margin: 0; display: inline;">
+                                    <button type="submit" class="watch-btn"
+                                        style="background: #1a1a1a; color: #ff4b4b; border: 1px solid #ff4b4b; padding: 8px 20px; cursor: pointer; font-weight: bold; border-radius: 4px;">🗑️
+                                        طرد</button>
+                                </form>
                             </div>
-                        </form>
-
-                        <!-- زر الطرد -->
-                        <!-- 🛠️ تعديل مسار الطرد ليستخدم نفس مسار الرفض لأن السيرفر يحذف السجل تماماً عند الرفض -->
-                        <form action="/admin-justice/reject/<%= s._id %>" method="POST"
-                            onsubmit="return confirm('هل أنت متأكد من طرد هذا الستريمر؟')"
-                            style="margin: 0; display: inline;">
-                            <button type="submit" class="watch-btn"
-                                style="background: #1a1a1a; color: #ff4b4b; border: 1px solid #ff4b4b; padding: 8px 20px; cursor: pointer; font-weight: bold;">🗑️
-                                طرد</button>
-                        </form>
-                    </div>
-                </div>
-                <% }) %>
+                        </div>
+                        <% }) %>
         </div>
     </section>
 
