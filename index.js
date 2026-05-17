@@ -43,7 +43,7 @@ async function updateKickStatus() {
                 const cleanName = streamer.kickUsername.trim().toLowerCase();
 
                 // تصحيح خطأ الرابط وصيغة الـ Template Literal بشكل سليم 100%
-                const response = await axios.get(`https://kick.com{cleanName}`, {
+                const response = await axios.get(`https://kick.com/api/v1/channels/${cleanName}`, {
                     headers: {
                         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
                         "Accept": "application/json, text/plain, */*",
@@ -53,7 +53,7 @@ async function updateKickStatus() {
                     timeout: 10000
                 });
 
-                if (response && response.data) {
+                if (response.data) {
                     const data = response.data;
                     const isLive = !!data.livestream;
                     const profilePic = data.user?.profile_pic || data.user?.profile?.avatar || "";
@@ -125,7 +125,7 @@ app.post('/apply', async (req, res) => {
     }
 });
 
-// مسار إضافة ستريمر لحفظ التوافقية مع الأكواد السابقة
+// مسار إضافة ستريمر من الكود القديم لحفظ التوافقية
 app.post('/add-streamer', async (req, res) => {
     try {
         const { username } = req.body;
