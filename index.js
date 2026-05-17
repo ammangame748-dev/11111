@@ -139,6 +139,29 @@ app.post('/add-streamer', async (req, res) => {
         res.status(500).send("الاسم مضاف سابقاً أو حدث خطأ");
     }
 });
+app.get('/admin-justice', async (req, res) => {
+    try {
+        const streamersData = await Streamer.find({});
+        res.render('admin', {
+            streamers: streamersData,
+            apps: []
+        });
+    } catch (err) {
+        res.status(500).send("خطأ في تحميل لوحة التحكم");
+    }
+});
+app.post('/admin-justice/update-links/:id', async (req, res) => {
+    try {
+        const { kickUrl, twitterUrl } = req.body;
+        await Streamer.findByIdAndUpdate(req.params.id, {
+            $set: { kickUrl, twitterUrl }
+        });
+        res.redirect('/admin-justice?pass=1234');
+    } catch (err) {
+        res.status(500).send("حدث خطأ أثناء التحديث");
+    }
+});
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => console.log(`🚀 السيرفر يعمل على منفذ: ${PORT}`));
