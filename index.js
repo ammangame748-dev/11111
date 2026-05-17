@@ -172,8 +172,17 @@ app.post('/add-streamer', async (req, res) => {
 // لوحة الأدمن
 app.get('/admin-justice', async (req, res) => {
     try {
+        // جلب الحسابات المقبولة بدقة
         const approvedStreamers = await Streamer.find({ status: 'approved' });
-        const pendingRequests = await Streamer.find({ status: 'pending' });
+        
+        // جلب الطلبات المعلقة + الحسابات القديمة المخفية التي ليس لها status
+        const pendingRequests = await Streamer.find({ 
+            $or: [
+                { status: 'pending' }, 
+                { status: { $exists: false } },
+                { status: null }
+            ] 
+        });
 
         res.render('admin', {
             streamers: approvedStreamers,
