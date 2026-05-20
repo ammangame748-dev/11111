@@ -125,7 +125,7 @@ await new Promise(r => setTimeout(r, 1000));
 }
 
 // تعديل أوقات الفحص لضمان توافق خادم Render المجاني
-setInterval(updateKickStatus, 120000);
+setInterval(updateKickStatus, 60000);
 setTimeout(updateKickStatus, 5000);
 
 // الصفحة الرئيسية
