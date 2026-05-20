@@ -11,11 +11,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://hsamhmaydh4_db_user:xls5Av4Nr4a5PA7W@cluster0.wjnh8d0.mongodb.net/BlackListDB?retryWrites=true&w=majority";
+// جلب الرابط من متغيرات البيئة بـ Render أو استخدام الرابط الافتراضي
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://hsamhmaydh4_db_user:hosamhosam2010@cluster0.wjnh8d0.mongodb.net/?appName=Cluster0";
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('✅ متصل بقاعدة البيانات بنجاح'))
-    .catch(err => console.error('❌ خطأ قاعدة البيانات:', err));
+    .catch(err => console.error('❌ خطأ قاعدة البيانات المباشر:', err.message));
 
 const Streamer = mongoose.model('KickConfig', new mongoose.Schema({
     kickUsername: { type: String, required: true, unique: true },
@@ -29,6 +30,12 @@ const Streamer = mongoose.model('KickConfig', new mongoose.Schema({
 
 let isUpdating = false;
 async function updateKickStatus() {
+    // حل مشكلة التوقف: إذا لم تكن قاعدة البيانات متصلة، لا تبدأ الفحص أبداً
+    if (mongoose.connection.readyState !== 1) {
+        console.log("⚠️ نظام التحديث الذكي: الانتظار حتى استقرار اتصال قاعدة البيانات...");
+        return;
+    }
+
     if (isUpdating) return;
     isUpdating = true;
     console.log("🚀 جاري فحص حالة البث باستخدام متصفح Puppeteer الحقيقي لتخطي الحظر...");
@@ -57,8 +64,6 @@ async function updateKickStatus() {
         });
 
         const page = await browser.newPage();
-        
-        // إعدادات إضافية لجعل المتصفح يبدو بشرياً وتخطي الـ Bad Auth
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
         await page.setExtraHTTPHeaders({
             'Accept-Language': 'en-US,en;q=0.9',
@@ -68,23 +73,19 @@ async function updateKickStatus() {
         for (const streamer of streamers) {
             const cleanName = streamer.kickUsername.trim().toLowerCase();
             try {
-                // الانتقال إلى الصفحة العادية بدلاً من الـ API لتفادي حظر الحماية المباشر
                 await page.goto(`https://kick.com{cleanName}`, {
                     waitUntil: 'networkidle2', 
                     timeout: 30000
                 });
 
-                // فحص إذا كانت الصفحة تحتوي على وسم البث المباشر (🔴 نتحقق من وجود عداد المشاهدين بالصفحة)
                 const liveData = await page.evaluate(() => {
                     const isLiveBadge = document.querySelector('.v-badge') || document.querySelector('[status="live"]') || document.body.innerText.includes('🔴') || document.body.innerText.includes('LIVE');
-                    
-                    // محاولة جلب صورة الحساب المحدثة
                     const imgElement = document.querySelector('img[alt*="avatar"]') || document.querySelector('img[src*="user"]');
                     const profilePic = imgElement ? imgElement.src : null;
 
                     return {
                         isLive: !!isLiveBadge,
-                        viewers: isLiveBadge ? Math.floor(Math.random() * 50) + 10 : 0, // قيمة تقريبية إذا حُظر الـ API، أو تخصيصها لاحقاً
+                        viewers: isLiveBadge ? Math.floor(Math.random() * 50) + 10 : 0, 
                         profilePic: profilePic
                     };
                 });
@@ -104,7 +105,6 @@ async function updateKickStatus() {
                     { $set: { isLive: false, viewers: 0 } }
                 );
             }
-            // زيادة وقت الانتظار إلى 5 ثوانٍ لتجنب حظر الآيبي الخاص بـ Render
             await new Promise(r => setTimeout(r, 5000));
         }
     } catch (globalErr) {
@@ -118,12 +118,15 @@ async function updateKickStatus() {
     }
 }
 
-// تعديل التوقيت: الفحص كل دقيقتين بدلاً من 30 ثانية لتجنب الحظر السريع من خوادم Render
+// تعديل أوقات الفحص لضمان توافق خادم Render المجاني
 setInterval(updateKickStatus, 120000);
-setTimeout(updateKickStatus, 3000);
+setTimeout(updateKickStatus, 5000);
 
 // الصفحة الرئيسية
 app.get('/', async (req, res) => {
+    if (mongoose.connection.readyState !== 1) {
+        return res.status(500).send("قاعدة البيانات قيد الاتصال الآن، يرجى تحديث الصفحة بعد ثوانٍ...");
+    }
     try {
         const streamersData = await Streamer.find({ status: 'approved' }).sort({ isLive: -1 });
         const totalStreamers = streamersData.length;
@@ -231,5 +234,6 @@ app.post('/admin-justice/update-links/:id', async (req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 3000;
+// تعديل بورت السيرفر ليتناسب مع Render مباشرة
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => console.log(`🚀 السيرفر يعمل على منفذ: ${PORT}`));
