@@ -70,10 +70,12 @@ async function updateKickStatus() {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8'
         });
 
+        // تم تنظيف التكرار والأقواس هنا بنجاح
         for (const streamer of streamers) {
             const cleanName = streamer.kickUsername.trim().toLowerCase();
             try {
-                await page.goto(`https://kick.com{cleanName}`, {
+                // الرابط الصحيح والمعدل
+                await page.goto(`https://kick.com/${cleanName}`, {
                     waitUntil: 'networkidle2', 
                     timeout: 30000
                 });
@@ -106,7 +108,7 @@ async function updateKickStatus() {
                 );
             }
             await new Promise(r => setTimeout(r, 5000));
-        }
+        } // إغلاق الـ for loop بشكل سليم
     } catch (globalErr) {
         console.error("❌ خطأ عام في نظام التحديث الذكي:", globalErr.message);
     } finally {
@@ -117,6 +119,7 @@ async function updateKickStatus() {
         console.log("🏁 انتهت دورة الفحص للمتصفح.");
     }
 }
+
 
 // تعديل أوقات الفحص لضمان توافق خادم Render المجاني
 setInterval(updateKickStatus, 120000);
@@ -141,6 +144,7 @@ app.get('/', async (req, res) => {
         res.status(500).send("خطأ في السيرفر");
     }
 });
+
 
 // التقديم للموقع
 app.post('/apply', async (req, res) => {
