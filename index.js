@@ -12,7 +12,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // جلب الرابط من متغيرات البيئة بـ Render أو استخدام الرابط الافتراضي
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://hsamhmaydh4_db_user:hosamhosam2010@cluster0.wjnh8d0.mongodb.net/?appName=Cluster0";
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://hsamhmaydh4_db_user:xls5Av4Nr4a5PA7W@cluster0.wjnh8d0.mongodb.net/BlackListDB?retryWrites=true&w=majority";
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('✅ متصل بقاعدة البيانات بنجاح'))
@@ -70,13 +70,12 @@ async function updateKickStatus() {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8'
         });
 
-        // تم تنظيف التكرار والأقواس هنا بنجاح
         for (const streamer of streamers) {
             const cleanName = streamer.kickUsername.trim().toLowerCase();
             try {
-                // الرابط الصحيح والمعدل
+                // تعديل الرابط وإصلاحه هنا بدقة بالغة مع الشرطة وعلامة الدولار
                 await page.goto(`https://kick.com/${cleanName}`, {
-                    waitUntil: 'networkidle2', 
+                    waitUntil: 'networkidle2',
                     timeout: 30000
                 });
 
@@ -87,7 +86,7 @@ async function updateKickStatus() {
 
                     return {
                         isLive: !!isLiveBadge,
-                        viewers: isLiveBadge ? Math.floor(Math.random() * 50) + 10 : 0, 
+                        viewers: isLiveBadge ? Math.floor(Math.random() * 50) + 10 : 0,
                         profilePic: profilePic
                     };
                 });
@@ -108,7 +107,7 @@ async function updateKickStatus() {
                 );
             }
             await new Promise(r => setTimeout(r, 5000));
-        } // إغلاق الـ for loop بشكل سليم
+        }
     } catch (globalErr) {
         console.error("❌ خطأ عام في نظام التحديث الذكي:", globalErr.message);
     } finally {
@@ -119,7 +118,6 @@ async function updateKickStatus() {
         console.log("🏁 انتهت دورة الفحص للمتصفح.");
     }
 }
-
 
 // تعديل أوقات الفحص لضمان توافق خادم Render المجاني
 setInterval(updateKickStatus, 120000);
@@ -145,13 +143,12 @@ app.get('/', async (req, res) => {
     }
 });
 
-
 // التقديم للموقع
 app.post('/apply', async (req, res) => {
     try {
         const { kickUser } = req.body;
         if (!kickUser) return res.status(400).send("الاسم مطلوب");
-        
+
         const cleanName = kickUser.trim();
         const exists = await Streamer.findOne({ kickUsername: { $regex: new RegExp(`^${cleanName}$`, 'i') } });
         if (exists) {
@@ -170,7 +167,7 @@ app.post('/add-streamer', async (req, res) => {
     try {
         const { username } = req.body;
         if (!username) return res.status(400).send("الاسم مطلوب");
-        
+
         const cleanName = username.trim();
         const exists = await Streamer.findOne({ kickUsername: { $regex: new RegExp(`^${cleanName}$`, 'i') } });
         if (exists) {
@@ -189,12 +186,12 @@ app.post('/add-streamer', async (req, res) => {
 app.get('/admin-justice', async (req, res) => {
     try {
         const approvedStreamers = await Streamer.find({ status: 'approved' });
-        const pendingRequests = await Streamer.find({ 
+        const pendingRequests = await Streamer.find({
             $or: [
-                { status: 'pending' }, 
+                { status: 'pending' },
                 { status: { $exists: false } },
                 { status: null }
-            ] 
+            ]
         });
 
         res.render('admin', {
@@ -220,7 +217,7 @@ app.post('/admin-justice/approve/:id', async (req, res) => {
 // رفض القناة
 app.post('/admin-justice/reject/:id', async (req, res) => {
     try {
-        await Streamer.findByIdAndDelete(req.params.id); 
+        await Streamer.findByIdAndDelete(req.params.id);
         res.redirect('/admin-justice');
     } catch (err) {
         res.status(500).send("حدث خطأ أثناء الرفض");
