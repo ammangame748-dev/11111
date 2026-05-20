@@ -75,8 +75,8 @@ async function updateKickStatus() {
             try {
                 // تعديل الرابط وإصلاحه هنا بدقة بالغة مع الشرطة وعلامة الدولار
                 await page.goto(`https://kick.com/${cleanName}`, {
-                    waitUntil: 'networkidle2',
-                    timeout: 30000
+                    waitUntil: 'domcontentloaded',
+                    timeout: 60000
                 });
 
                 const liveData = await page.evaluate(() => {
